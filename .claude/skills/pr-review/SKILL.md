@@ -66,7 +66,7 @@ Read files that are not on disk with the GitHub MCP `get_file_contents` (owner `
 Use the GitHub MCP `pull_request_read` (methods `get`, `get_diff`, `get_files`, `get_reviews`), or `gh api` (REST). Do not use `gh pr view` / `gh pr diff`: cloud sessions reject the GraphQL calls that those commands make.
 
 ```bash
-gh api repos/<owner>/<repo>/pulls/<n>                 # title, body, user.login, base.ref, head.sha, draft, state
+gh api repos/<owner>/<repo>/pulls/<n>                 # title, body, user.login, base.ref, base.sha, head.sha, draft, state
 gh api repos/<owner>/<repo>/pulls/<n>/files --paginate
 gh api repos/<owner>/<repo>/pulls/<n>/commits --paginate
 gh api repos/<owner>/<repo>/pulls/<n> -H "Accept: application/vnd.github.diff"
@@ -113,7 +113,7 @@ Look for logic errors, null/undefined paths, races, error paths, dead or debug c
 - A "fix" for the chain reaction by blast (invariant 5). This is intended. Do not report the chain reaction itself as a bug.
 - A per-connection server timer that is not cleared on `disconnect` (invariant 7).
 
-**Agent and tooling configuration.** A PR that changes `.claude/**`, `CLAUDE.md` (any directory), `.mcp.json`, `.husky/**` or `.github/**` changes what agents, hooks or CI execute. Each such file is an Issue (must fix) that says "a maintainer must read this change before merge", with the changed paths, even when the change looks harmless. In auto mode, such a PR also skips Check 4 (the allowlist in Check 4 already fails for these paths).
+**Agent and tooling configuration.** A PR that changes `.claude/**`, `CLAUDE.md`, `CLAUDE.local.md` or `AGENTS.md` (any directory), `.mcp.json`, `.husky/**` or `.github/**` changes what agents, hooks or CI execute. Each such file is an Issue (must fix) that says "a maintainer must read this change before merge", with the changed paths, even when the change looks harmless. In auto mode, such a PR also skips Check 4 (the allowlist in Check 4 already fails for these paths).
 
 ### Check 2: Cross-repo contract
 
@@ -137,23 +137,23 @@ When it does:
 
 Run the tools on `$sha` in a temporary worktree. Never run them in the maintainer's checkout.
 
-**Guard first: path allowlist.** These tools run code that the PR controls (npm scripts, build config, packages). Decide with this command over the PR's file list, not by reading the diff. It passes only when every changed path (old and new name of a rename) is under `src/`, `public/` or `docs/`, or ends in `.md`, and none is agent or tooling configuration. An empty or unreadable list fails.
+**Guard first: path allowlist.** These tools run code that the PR controls (npm scripts, build config, packages). Decide with this command, not by reading the diff. It takes the file list from local git (the merge base of `$base` and `$sha` against `$sha`), because the GitHub files API stops at 3000 files. `$base` is the PR's `base.sha` from Step 2 (`gh api repos/<owner>/<repo>/pulls/<n> --jq .base.sha`; this also works for a merged PR), or `origin/dev` for a branch target. If you cannot get `$base`, the guard fails. `--no-renames` lists a rename as a delete plus an add, so both the old and the new name are checked. It passes only when git exits 0, the list is not empty, every path is under `src/`, `public/` or `docs/` or ends in `.md`, and no path is agent or tooling configuration. Any other result fails.
 
 ```bash
-paths="$(mktemp)"
-# PR target:
-gh api repos/<owner>/<repo>/pulls/<n>/files --paginate \
-  --jq '.[] | .filename, (.previous_filename // empty)' > "$paths"
-# Branch target instead:
-# git -C <repo> diff --name-only --no-renames origin/dev...<branch> > "$paths"
+paths="$(mktemp)"; rc=0
+[ -n "$base" ] && [ -n "$sha" ] || rc=99
+[ "$rc" -eq 0 ] && { git -C <repo> diff --name-only --no-renames "$base...$sha" > "$paths" || rc=$?; }
 allow='^(src|public|docs)/|\.md$'
-deny='(^|/)(\.claude|\.husky|\.github)/|(^|/)CLAUDE\.md$|(^|/)\.mcp\.json$'
-if [ -s "$paths" ] && ! grep -Ev "$allow" "$paths" >/dev/null && ! grep -E "$deny" "$paths" >/dev/null
-then echo "ALLOWLIST: pass"
-else echo "ALLOWLIST: fail"; { grep -Ev "$allow" "$paths"; grep -E "$deny" "$paths"; } | sort -u
+deny='(^|/)(\.claude|\.husky|\.github)/|(^|/)(CLAUDE|CLAUDE\.local|AGENTS)\.md$|(^|/)\.mcp\.json$'
+if [ "$rc" -eq 0 ] && [ -s "$paths" ] \
+  && ! grep -Ev "$allow" "$paths" >/dev/null && ! grep -E "$deny" "$paths" >/dev/null
+then echo "ALLOWLIST: pass ($(wc -l < "$paths" | tr -d ' ') paths)"
+else echo "ALLOWLIST: fail (git exit $rc)"; { grep -Ev "$allow" "$paths"; grep -E "$deny" "$paths"; } | sort -u | head -50
 fi
 rm -f "$paths"
 ```
+
+Git prints a path with unusual characters in quotes (`"src/..."`). Such a path fails the allowlist, which is the safe result.
 
 - `ALLOWLIST: pass`: run the tools below.
 - `ALLOWLIST: fail`, auto mode or `--dry-run`: do not run Check 4. Put "lint, types and build not run: the PR changes files outside the allowlist (<paths>)" under Unverified. The verdict is COMMENT at most.
