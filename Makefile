@@ -10,8 +10,8 @@ setup: ## Init submodules, install deps, build backend dist
 	cd Bomberman-2.0-Backend && npm run build
 	cd Bomberman-2.0 && HUSKY=0 npm ci
 
-db: ## Start local MongoDB (docker)
-	docker compose up -d mongo
+db: ## Start local MongoDB (docker) and wait until healthy
+	docker compose up -d --wait mongo
 
 db-down: ## Stop local MongoDB
 	docker compose down

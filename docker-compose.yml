@@ -6,6 +6,12 @@ services:
       - "27017:27017"
     volumes:
       - bomberman-mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+      start_period: 2s
 
 volumes:
   bomberman-mongo-data:
