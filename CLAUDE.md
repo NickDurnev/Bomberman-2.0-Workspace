@@ -56,12 +56,12 @@ Write specs and plans to `local/specs/` and `local/plans/`. Never commit them.
 
 ## Working in one repo
 
-Tested with `claude -p` from `Bomberman-2.0-Backend/` (a submodule):
+Behaviour of `claude -p` started in `Bomberman-2.0-Backend/` (a submodule):
 
 - Root `CLAUDE.md` loads (found by walking up the directory tree).
 - Root `.claude/rules/` load: all 4 rules.
 - The child `.claude/rules/` load too. The child `commit-conventions` and `pr-conventions` duplicate the root rules.
-- Root project skills do NOT load from a child directory (tested after Task 6: the session listed no project skills).
+- Root project skills do NOT load from a child directory. The session lists no root project skills.
 
 To use root skills or agents, start Claude Code from the workspace root.
 
