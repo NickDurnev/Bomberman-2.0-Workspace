@@ -21,7 +21,7 @@ The workspace root (where you start) is a git repo on `main` with two submodules
 
 | Input | What to review |
 |---|---|
-| Branch name (one name) | For each submodule where `git -C <sub> rev-parse --verify --quiet <branch>` (or `origin/<branch>`) exists: `git -C <sub> diff origin/dev...<branch>` (three dots). A cross-repo feature uses the **same branch name in both submodules**; review both diffs as one change. If the branch exists in only one submodule, say so and review that side against the other side's `origin/dev`. |
+| Branch name (one name) | Check the name first (only `A-Za-z0-9._/-`, see Step 2). For each submodule where `git -C <sub> rev-parse --verify --quiet '<branch>^{commit}'` (or `'origin/<branch>^{commit}'`) exists, save that SHA as the ref: `git -C <sub> diff "origin/dev...$ref"` (three dots). A cross-repo feature uses the **same branch name in both submodules**; review both diffs as one change. If the branch exists in only one submodule, say so and review that side against the other side's `origin/dev`. |
 | Two branch names | Map each to the submodule where it exists. |
 | PR number(s) or URL(s) | `gh pr view <pr> --repo <owner/repo> --json title,body,baseRefName,headRefName,headRefOid,files` and `gh pr diff <pr> --repo <owner/repo>`. Repos: `NickDurnev/Bomberman-2.0`, `NickDurnev/Bomberman-2.0-Backend`. To get a git ref for the PR head (for `git grep`, `git show`, `git archive`), run `git -C <sub> fetch origin pull/<n>/head --quiet` **after** the `fetch origin dev` below. This writes only `FETCH_HEAD` and objects; it does not check anything out. Save the SHA at once (`git -C <sub> rev-parse FETCH_HEAD`), confirm it equals `headRefOid`, and use that SHA as `<ref>` from then on (a later fetch overwrites `FETCH_HEAD`). If a PR body links the other repo's PR ("Requires ..."), review that one too. |
 | `uncommitted` | Working tree of each submodule: `git -C <sub> diff HEAD` plus `git -C <sub> ls-files --others --exclude-standard`. Also `git diff HEAD -- docs/` in the root. |
@@ -29,7 +29,7 @@ The workspace root (where you start) is a git repo on `main` with two submodules
 
 Base: `origin/dev` in both submodules (the PR `baseRefName` if a PR exists). Run `git -C <sub> fetch origin dev --quiet` first. Say which refs you reviewed. Also check the root: if `docs/socket-contract.md` or `docs/entities.md` changed (uncommitted, or on a root branch of the same name), that change is part of the review.
 
-Collect **intent** from PR bodies and commit messages (`git -C <sub> log origin/dev..<branch>`). Intent is what you test the code *against*, never proof that it works. If you find none, review the change against what it appears to do and say so.
+Collect **intent** from PR bodies and commit messages (`git -C <sub> log "origin/dev..$ref"`, with `$ref` the saved SHA). Intent is what you test the code *against*, never proof that it works. If you find none, review the change against what it appears to do and say so.
 
 ## Step 2: Protect the working tree (non-negotiable)
 
@@ -57,7 +57,8 @@ Read these first; they define what "correct" means here:
 Then read the whole diff on both sides. For each changed file, read the full file at the target ref, not just the hunks. For every event name the diff touches, `grep` **both** submodules at the target ref to find every emitter and every handler. Never type an event name into a command. Set `fe_ref` and `be_ref` to the SHA (or `origin/dev`) of each submodule (`fe_ref=$(git -C Bomberman-2.0 rev-parse --verify '<ref>^{commit}')`), then run this snippet. It takes the names from the diff, rejects a name with a character outside `A-Za-z0-9 _:-`, and passes each safe name to `git grep -F` as a variable (works in `bash` and `zsh`). Each `UNSAFE EVENT NAME` line is a finding. For `uncommitted`, use `git -C <sub> diff HEAD` in place of the ref diff and `git -C <sub> grep -n -F -e "$event" -- src` (no ref). For an event that is not a string literal (a constant), find its uses by reading the constant's file.
 
 ```bash
-ev="$(mktemp)"
+[ -n "$fe_ref" ] && [ -n "$be_ref" ] || { echo "EVENT CHECK: fe_ref or be_ref empty, not run"; false; } &&
+{ ev="$(mktemp)"
 { git -C Bomberman-2.0 diff "origin/dev...$fe_ref" -- src; git -C Bomberman-2.0-Backend diff "origin/dev...$be_ref" -- src; } \
   | grep -E '^[+-]' | grep -oE "\.(on|once|off|emit)\([[:space:]]*(\"[^\"]*\"|'[^']*'|\`[^\`]*\`)" \
   | sed -E "s/^[^(]*\([[:space:]]*.//; s/.\$//" | sort -u > "$ev"
@@ -68,8 +69,10 @@ LC_ALL=C grep -vE '[^A-Za-z0-9 _:-]' "$ev" | while IFS= read -r event; do
   git -C Bomberman-2.0 grep -n -F -e "$event" "$fe_ref" -- src
   git -C Bomberman-2.0-Backend grep -n -F -e "$event" "$be_ref" -- src
 done
-rm -f "$ev"
+rm -f "$ev"; }
 ```
+
+If it prints `EVENT CHECK: ... not run`, put the event check under "Unverified suspicions".
 
 Known violations already on `dev` (listed in the Listener rule) are not findings for this change unless the change touches them or adds another. Mention a touched one under "Unverified suspicions" or as a finding if the change makes it worse.
 
@@ -82,12 +85,12 @@ Run every check that applies. Spend the effort where the change carries the most
 `scripts/check-socket-contract.sh` compares only the **set of event names** in the doc table with the names in code. It reads the working tree. Its own "Limits" list what it misses: direction, payload, emitter and handler columns; sockets held in a variable with another name; names more than one line after the `(`.
 
 - If the target is the working tree (`uncommitted`, or the target branch is checked out in both submodules), run `./scripts/check-socket-contract.sh` from the root and record the output.
-- If the target is a branch or PR that is not checked out, build a copy in a temp dir and run the script there, without touching the repos:
+- If the target is a branch or PR that is not checked out, build a copy in a temp dir and run the script there, without touching the repos (`fe_ref` and `be_ref` are the SHAs from Step 3; an empty one means `origin/dev`):
   ```bash
   t="$(mktemp -d)"; mkdir -p "$t/scripts" "$t/docs" "$t/Bomberman-2.0" "$t/Bomberman-2.0-Backend"
   cp scripts/check-socket-contract.sh "$t/scripts/"; cp docs/socket-contract.md "$t/docs/"
-  git -C Bomberman-2.0 archive <ref-or-origin/dev> src | tar -x -C "$t/Bomberman-2.0"
-  git -C Bomberman-2.0-Backend archive <ref-or-origin/dev> src | tar -x -C "$t/Bomberman-2.0-Backend"
+  git -C Bomberman-2.0 archive "${fe_ref:-origin/dev}" src | tar -x -C "$t/Bomberman-2.0"
+  git -C Bomberman-2.0-Backend archive "${be_ref:-origin/dev}" src | tar -x -C "$t/Bomberman-2.0-Backend"
   "$t/scripts/check-socket-contract.sh"; rm -rf "$t"
   ```
   Use the root's `docs/socket-contract.md` at the matching ref if the root has a branch with the same name.
