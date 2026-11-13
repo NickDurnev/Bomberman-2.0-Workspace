@@ -32,7 +32,7 @@ description: How to work on any change in the Bomberman workspace — before you
 
 Run these in **every repo you touched**. Never skip a step. Never commit with a NEW failure.
 
-`dev` already has Biome and `tsc` errors. Your change must add no NEW errors versus `origin/dev`:
+`dev` already has Biome errors in both repos (no known `tsc` errors). Your change must add no NEW errors versus `origin/dev`:
 
 - Biome: run it only on the files you changed yourself. `<changed files>` is that list of paths (for example from `git diff --name-only origin/dev...HEAD` plus your uncommitted files). Never run Biome with `--write` on the whole repo: it rewrites many unrelated files.
 - `tsc`: compare the error list with the same command on `origin/dev`. An error that is also on `origin/dev` is not yours.
