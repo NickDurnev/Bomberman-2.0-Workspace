@@ -60,7 +60,7 @@ Tested with `claude -p` from `Bomberman-2.0-Backend/` (a submodule):
 - Root `CLAUDE.md` loads (found by walking up the directory tree).
 - Root `.claude/rules/` load: all 4 rules.
 - The child `.claude/rules/` load too. The child `commit-conventions` and `pr-conventions` duplicate the root rules.
-- Root project skills: not verified. No skills exist yet. Recheck after Task 6. Do not assume they load from a child directory.
+- Root project skills do NOT load from a child directory (tested after Task 6: the session listed no project skills).
 
 To use root skills or agents, start Claude Code from the workspace root.
 
