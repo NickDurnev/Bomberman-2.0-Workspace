@@ -29,15 +29,16 @@ Run `make help` to list them.
 | --- | --- |
 | `make setup` | Init submodules, install deps, build backend `dist` |
 | `make db` / `make db-down` | Start / stop local MongoDB |
-| `make backend` | Backend on :4000 against local MongoDB |
+| `make backend` | Backend on :4000 against local MongoDB. Rebuilds `dist` and restarts on every `src/` change |
 | `make frontend` | Frontend on :3000 against local backend |
 | `make dev` | MongoDB, backend and frontend |
 
 ## Local dev
 
 - On a fresh clone, run `make setup` first.
-- The backend `package.json` `_moduleAliases` point at `./dist`. `make setup` builds `dist`.
-- If you change source in an aliased module, you may need `npm run build` in the backend.
+- The backend `package.json` `_moduleAliases` point at `./dist`. Aliased imports (`@entity`, `@constants`, ...) load from `dist`, not `src`.
+- So `make backend` does not use `npm run dev` (ts-node would run old `dist` code). It runs nodemon, which runs `npm run build && node dist/app.js` on every change in `src/`.
+- Do not run the backend with `npm run dev`. A new or changed aliased module has no effect there until the next build.
 - Local runs always use Docker Mongo. Never use the production `DB_HOST`.
 
 ## Rules
