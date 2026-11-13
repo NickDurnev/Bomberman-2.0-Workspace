@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(git branch:*)",
+      "Bash(npm run lint:fix:*)",
+      "Bash(npm run format:fix:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx tsc --noEmit:*)",
+      "Bash(make help:*)",
+      "Bash(make db:*)",
+      "Bash(make dev:*)",
+      "Bash(./scripts/check-socket-contract.sh:*)"
+    ]
+  }
+}
