@@ -30,7 +30,7 @@ description: How to work on any change in the Bomberman workspace — before you
 
 ## After you finish
 
-Run these in **every repo you touched**. Never skip a step. Never commit with a failing step.
+Run these in **every repo you touched**. Never skip a step. Never commit with a failing step. Exception: `dev` has existing Biome and `tsc` errors. Your change must add no NEW errors versus `origin/dev`: check the files you changed with `npx biome check <changed files>`, and compare `tsc` output with `origin/dev`. Do not fix unrelated errors in the same PR.
 
 ### Bomberman-2.0-Backend
 
