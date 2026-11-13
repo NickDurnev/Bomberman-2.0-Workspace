@@ -2,7 +2,7 @@
 
 Every socket.io event exchanged between the client (`Bomberman-2.0`) and the server (`Bomberman-2.0-Backend`). This seam is where past production bugs came from, so treat this file as the contract: change it in the same PR that changes an event.
 
-`scripts/check-socket-contract.sh` compares the table below with the event names used in both repos (string literals, constants and handler tables). Run it after any socket change; it exits 1 and prints the difference when the two disagree.
+`scripts/check-socket-contract.sh` compares the table below with the event names used in both repos (string literals, constants and handler tables). Run it after any socket change; it exits 1 and prints the difference when the two disagree. It checks event **names** only; see [Check limits](#check-limits).
 
 ## Transport and identity
 
@@ -71,6 +71,10 @@ Direction: `C→S` client to server, `S→C` server to client, `both` when the s
 <!-- socket-contract:end -->
 
 socket.io built-in events are not in the table and the check script ignores them: the server uses `connection` and `disconnect` (`Bomberman-2.0-Backend/src/app.ts` releases the `Play` bomb-queue timer and removes the player from a pending or running game); the client uses `connect` and `disconnect` in `Bomberman-2.0/src/components/Socket.tsx`.
+
+### Check limits
+
+`scripts/check-socket-contract.sh` compares only the **set of event names** in the table with the set in code. It does not check the direction, payload, emitter or handler columns; keep those correct by hand. It finds names on these receivers: `clientSocket`, `socket`, `client`, `sockets`, `broadcast`, `serverSocket`, `io` (plus `.to(...)`/`.in(...)` chains). It reads string, single-quoted and template literals, UPPER_CASE constants, handler-table variables, and a name on the line after a call that opens with `.on(` at the end of a line. It does not see a socket held in a variable with another name, or a name more than one line after the opening `(`. A template literal with `${...}` or an unreadable first argument fails the check instead of being guessed.
 
 `Game`, `Player`, `Spoil` and `Portal` in payloads are the server entity objects serialised to JSON (see [entities.md](entities.md)). The `Map` fields of `Game` (`spoils`, `bombs`, `portals`, `tombstones`) serialise to `{}`; the client must not read them. `prevGameInfo` is the `Game` with each player that has no kills given a `noKillPhrase` string. The client mirrors these shapes in `Bomberman-2.0/src/utils/types.ts` (`GameData`, `EndGame`, `PlayerWin`, `ICell`, `ITombStone`, `pickedSpoilSocketData`); the types are not shared, so a payload change must update both repos.
 
