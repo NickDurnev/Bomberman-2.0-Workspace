@@ -19,6 +19,7 @@ Both child repos use the `dev` branch as the base for PRs. The root repo uses `m
 - `scripts/check-socket-contract.sh` - checks `docs/socket-contract.md` against the code.
 - `Makefile`, `docker-compose.yml` - local dev (Mongo in Docker).
 - `.claude/rules/` - rules loaded in every session (see below).
+- `.github/dependabot.yml` - daily PR that bumps the submodule pointers to the latest `dev`.
 - `local/` - specs and plans. Gitignored. Never commit it.
 
 ## Make targets

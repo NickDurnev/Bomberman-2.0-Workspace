@@ -19,7 +19,7 @@ description: How to work on any change in the Bomberman workspace — before you
 
 - Branch from `origin/dev` in each submodule you touch: `type/short-name` (e.g. `feat/bot-player`).
 - Cross-repo feature → **same branch name in both repos**.
-- The root repo (`main`) changes only for docs, `.claude/`, Makefile, and submodule pointer bumps.
+- The root repo (`main`) changes only for docs, `.claude/`, `.github/`, Makefile, and submodule pointer bumps.
 
 ## While you build (cross-repo features)
 
@@ -83,7 +83,7 @@ Run `sync-docs`: update `docs/` for anything the change made untrue (events, ent
 - Include: what changed and why, how it was verified (checks + `play-local` result), deferred review findings.
 - **No AI attribution.** No "Generated with Claude Code" footer and no mention of Claude, Anthropic or an AI assistant. Write the title and body as the developer.
 - Use the GitHub MCP (`mcp__plugin_github_github__*`) for PRs; fall back to `gh` if it is not available. Git stays on the CLI.
-- **Do not merge.** The maintainer reviews, merges, and verifies in DEV. After both PRs merge, bump the submodule pointers in the root (`chore: bump submodules`).
+- **Do not merge.** The maintainer reviews, merges, and verifies in DEV. After a PR merges to `dev`, Dependabot (`.github/dependabot.yml`) opens a daily PR in the root that bumps the submodule pointer. The maintainer merges it. For a bump before then, run `git submodule update --remote` in the root and commit `chore: bump submodules`.
 
 ## Never
 
