@@ -30,22 +30,27 @@ description: How to work on any change in the Bomberman workspace — before you
 
 ## After you finish
 
-Run these in **every repo you touched**. Never skip a step. Never commit with a failing step. Exception: `dev` has existing Biome and `tsc` errors. Your change must add no NEW errors versus `origin/dev`: check the files you changed with `npx biome check <changed files>`, and compare `tsc` output with `origin/dev`. Do not fix unrelated errors in the same PR.
+Run these in **every repo you touched**. Never skip a step. Never commit with a NEW failure.
+
+`dev` already has Biome and `tsc` errors. Your change must add no NEW errors versus `origin/dev`:
+
+- Biome: run it only on the files you changed yourself. `<changed files>` is that list of paths (for example from `git diff --name-only origin/dev...HEAD` plus your uncommitted files). Never run Biome with `--write` on the whole repo: it rewrites many unrelated files.
+- `tsc`: compare the error list with the same command on `origin/dev`. An error that is also on `origin/dev` is not yours.
+- Do not fix unrelated errors in the same PR.
 
 ### Bomberman-2.0-Backend
 
 ```bash
-npm run lint:fix && npm run format:fix   # Biome
-npx tsc --noEmit                         # types
+npx biome check --write <changed files>  # Biome lint + format, only your files
+npx tsc --noEmit                         # types; compare with origin/dev
 npm run build                            # tsc + copy maps
-# Phase 3 adds: npm test
 ```
 
 ### Bomberman-2.0 (frontend)
 
 ```bash
-npm run lint:fix && npm run format:fix   # Biome
-npx tsc --noEmit                         # types (vite build does NOT type-check)
+npx biome check --write <changed files>  # Biome lint + format, only your files
+npx tsc --noEmit                         # types (vite build does NOT type-check); compare with origin/dev
 npm run build
 ```
 
@@ -77,7 +82,6 @@ Run `sync-docs`: update `docs/` for anything the change made untrue (events, ent
 - Cross-repo feature: each PR links the other ("Requires NickDurnev/Bomberman-2.0-Backend#NN"). Merge order: backend first.
 - Include: what changed and why, how it was verified (checks + `play-local` result), deferred review findings.
 - **No AI attribution.** No "Generated with Claude Code" footer and no mention of Claude, Anthropic or an AI assistant. Write the title and body as the developer.
-
 - Use the GitHub MCP (`mcp__plugin_github_github__*`) for PRs; fall back to `gh` if it is not available. Git stays on the CLI.
 - **Do not merge.** The maintainer reviews, merges, and verifies in DEV. After both PRs merge, bump the submodule pointers in the root (`chore: bump submodules`).
 
