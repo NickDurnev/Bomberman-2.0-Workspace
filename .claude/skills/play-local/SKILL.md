@@ -21,16 +21,16 @@ The windows are normal Google Chrome with separate profiles (each has its own `l
 - The debug ports listen on `127.0.0.1` only. While the windows are open, any local process can control them. Close them after the session (`make browsers-down`).
 - Navigate only to `http://localhost:3000`. Never open any other site.
 - `local/` is gitignored. Never commit it or paste profile data anywhere (chat, logs, PRs, issues, files).
-- Use the two test profiles below. They differ in `email` and `name`. Two players with the same name and picture collapse into one player (see [known-traps.md](../../../docs/known-traps.md#same-account-in-two-sessions-collapses-into-one-player)). Use only the `.local` test domain.
+- Use the two test profiles below. They differ in `email` and `name`. Two players with the same name and picture collapse into one player (see [known-traps.md](../../../docs/known-traps.md#same-account-in-two-sessions-collapses-into-one-player)). Use only the reserved `example.com` test domain (RFC 2606). The backend email check rejects `.local`, and then `POST /api/v1/auth` returns 422 and no `User` is created.
 
 ## Seed the mocked players
 
 The app reads the user from `localStorage["google_user"]` on load. The local backend accepts the profile from the client. The `picture` is empty, so the client shows a random avatar.
 
 1. In `player1`, use `navigate_page` to `http://localhost:3000`. Run this with `evaluate_script`, then reload the page:
-   `() => localStorage.setItem("google_user", JSON.stringify({ email: "player1@test.local", name: "Player 1", picture: "", locale: "en-US" }))`
+   `() => localStorage.setItem("google_user", JSON.stringify({ email: "player1@example.com", name: "Player 1", picture: "", locale: "en-US" }))`
 2. In `player2`, do the same with this snippet:
-   `() => localStorage.setItem("google_user", JSON.stringify({ email: "player2@test.local", name: "Player 2", picture: "", locale: "en-US" }))`
+   `() => localStorage.setItem("google_user", JSON.stringify({ email: "player2@example.com", name: "Player 2", picture: "", locale: "en-US" }))`
 3. Confirm that each window shows the lobby and not the login screen.
 
 The local MongoDB gets the users `Player 1` and `Player 2`. This is fine, because it is local. To clear a window at the end, run `() => localStorage.removeItem("google_user")`. This is not required. `make browsers-reset` deletes both profiles.
