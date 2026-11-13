@@ -11,12 +11,15 @@ Run the game on the local stack and play one room with two browser profiles. Mat
 
 - Start the stack only with `make dev`. It uses local MongoDB. Never run against the production `DB_HOST`.
 - Start Claude at the workspace root. `.mcp.json` uses the relative path `local/browser-profiles/player1|player2`, which resolves from the current directory.
-- `local/` is gitignored. The profiles hold Google session cookies. Never commit them.
+- `local/` is gitignored. The profiles hold live Google session cookies. Never commit them.
+- Use two throwaway test Google accounts. Never log in with a personal or work account.
+- In these profiles, navigate only to `http://localhost:3000`, and to the Google sign-in pages during login. Never open any other site.
+- Never paste profile data, cookies or tokens anywhere (chat, logs, PRs, issues, files).
 - The browsers are headed. The MCP servers are `player1` and `player2`.
 
 ## One-time first run (maintainer)
 
-Login is Google OAuth only. The two profiles must use **two different Google accounts**. Two players with one account collapse into one player (see [known-traps.md](../../../docs/known-traps.md#same-account-in-two-sessions-collapses-into-one-player)).
+Login is Google OAuth only. The two profiles must use **two different throwaway test Google accounts** (never a personal or work account). Two players with one account collapse into one player (see [known-traps.md](../../../docs/known-traps.md#same-account-in-two-sessions-collapses-into-one-player)).
 
 1. Run `make dev`. Wait for `:4000` and `:3000`.
 2. In `player1`, open `http://localhost:3000`. Log in by hand with Google account A.
