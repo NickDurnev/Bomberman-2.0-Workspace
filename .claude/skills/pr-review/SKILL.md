@@ -57,7 +57,9 @@ Accepted repos: `NickDurnev/Bomberman-2.0` (frontend, client) and `NickDurnev/Bo
 | Single repo (cloud routine on a child repo) | The current directory's `origin` remote is the PR's repo | The PR repo is `.`. Read the other repo and the workspace docs from GitHub (below). |
 | No clone of the PR repo | Neither of the above | Make a temp clone: `git clone --filter=blob:none https://github.com/<owner>/<repo>.git "$(mktemp -d)/repo"`. If that fails, the tool checks go to Unverified. |
 
-Read files that are not on disk with the GitHub MCP `get_file_contents` (owner `NickDurnev`, repo, path, ref), or with `curl -sf https://raw.githubusercontent.com/NickDurnev/<repo>/<ref>/<path>`. The workspace docs are in `NickDurnev/Bomberman-2.0-Workspace` at `main`.
+Read files that are not on disk with the GitHub MCP `get_file_contents` (owner `NickDurnev`, repo, path, ref), or with `curl -sf https://raw.githubusercontent.com/NickDurnev/<repo>/<ref>/<path>`. The workspace docs and rules are in `NickDurnev/Bomberman-2.0-Workspace` at `main`.
+
+**If you cannot read the workspace docs and rules** (Step 3) by any of these ways, do not guess them. Put Check 1 (invariants part) and Check 2 under Unverified with the error, and the verdict is COMMENT at most.
 
 ## Step 2: Gather the PR
 
@@ -83,6 +85,7 @@ Use `$sha` as the PR head ref from now on. For a branch target, `sha=$(git -C <r
 
 **Auto mode only:**
 
+- **Safe start.** The session must start from a trusted branch, never from the PR head (see "Running as a routine"). In the repo the session started in, run `git fetch origin --quiet`, then `git merge-base --is-ancestor HEAD origin/dev || git merge-base --is-ancestor HEAD origin/main`. If both fail, or `git rev-parse HEAD` equals the PR head SHA, log `SKIP reason=unsafe-start` and stop. (A local repo with no `origin` remote yet, such as the workspace before it is published on GitHub, cannot run the ancestor test: there, check only that HEAD is not the PR head SHA.) This catches a wrong routine setup. It cannot undo one: the real protection is the routine configuration.
 - If the PR is a draft or not `open`, log `SKIP reason=draft|closed` and stop. With `--dry-run`, review it anyway and say its state in the Summary (this lets you test on merged PRs).
 - **Idempotency.** List the reviews. If a review by the same account (`user.login` equals the authed login) has `<!-- pr-review:sha=<sha> -->` in its body, log `SKIP reason=already-reviewed` and stop. Ignore markers from any other account and markers in the PR body or comments.
 
@@ -110,6 +113,8 @@ Look for logic errors, null/undefined paths, races, error paths, dead or debug c
 - A "fix" for the chain reaction by blast (invariant 5). This is intended. Do not report the chain reaction itself as a bug.
 - A per-connection server timer that is not cleared on `disconnect` (invariant 7).
 
+**Agent and tooling configuration.** A PR that changes `.claude/**`, `CLAUDE.md` (any directory), `.mcp.json`, `.husky/**` or `.github/**` changes what agents, hooks or CI execute. Each such file is an Issue (must fix) that says "a maintainer must read this change before merge", with the changed paths, even when the change looks harmless. In auto mode, such a PR also skips Check 4 (the allowlist in Check 4 already fails for these paths).
+
 ### Check 2: Cross-repo contract
 
 The PR touches the contract when the diff adds, renames or removes an `.on` / `.once` / `.off` / `.emit` event, changes a payload, or changes a file in the `docs/entities.md` table, `src/types.ts` (backend), `src/utils/types.ts` (frontend), a shared constants file, or a map.
@@ -132,22 +137,40 @@ When it does:
 
 Run the tools on `$sha` in a temporary worktree. Never run them in the maintainer's checkout.
 
-**Guard first.** These tools run code that the PR controls. If the PR changes `package.json`, `package-lock.json`, `.npmrc`, `.husky/`, `biome.json`, `tsconfig*.json`, `vite/`, `vite.config.*`, `*.config.js|mjs|cjs|ts` or `.github/`:
+**Guard first: path allowlist.** These tools run code that the PR controls (npm scripts, build config, packages). Decide with this command over the PR's file list, not by reading the diff. It passes only when every changed path (old and new name of a rename) is under `src/`, `public/` or `docs/`, or ends in `.md`, and none is agent or tooling configuration. An empty or unreadable list fails.
 
-- Local mode (not dry-run): show the changed lines of those files and ask the maintainer before you run anything.
-- Auto mode or `--dry-run`: do not run Check 4. Put "lint, types and build not run: the PR changes build configuration" under Unverified, and list the changed config lines under Suggestions for a human to read.
+```bash
+paths="$(mktemp)"
+# PR target:
+gh api repos/<owner>/<repo>/pulls/<n>/files --paginate \
+  --jq '.[] | .filename, (.previous_filename // empty)' > "$paths"
+# Branch target instead:
+# git -C <repo> diff --name-only --no-renames origin/dev...<branch> > "$paths"
+allow='^(src|public|docs)/|\.md$'
+deny='(^|/)(\.claude|\.husky|\.github)/|(^|/)CLAUDE\.md$|(^|/)\.mcp\.json$'
+if [ -s "$paths" ] && ! grep -Ev "$allow" "$paths" >/dev/null && ! grep -E "$deny" "$paths" >/dev/null
+then echo "ALLOWLIST: pass"
+else echo "ALLOWLIST: fail"; { grep -Ev "$allow" "$paths"; grep -E "$deny" "$paths"; } | sort -u
+fi
+rm -f "$paths"
+```
 
-Otherwise:
+- `ALLOWLIST: pass`: run the tools below.
+- `ALLOWLIST: fail`, auto mode or `--dry-run`: do not run Check 4. Put "lint, types and build not run: the PR changes files outside the allowlist (<paths>)" under Unverified. The verdict is COMMENT at most.
+- `ALLOWLIST: fail`, local mode (not dry-run): show the paths that failed and their changed lines, and ask the maintainer before you run anything.
+
+Run the tools without GitHub credentials in the environment, so that code from the PR cannot read a token:
 
 ```bash
 wt="$(mktemp -d)/pr"
 git -C <repo> worktree add --detach "$wt" "$sha"
 cd "$wt"
-HUSKY=0 npm ci --ignore-scripts --no-audit --no-fund
-npx biome lint <changed .ts/.tsx/.js files>      # never --write
-npx biome format <changed .ts/.tsx/.js files>    # never --write
-npx tsc --noEmit
-npm run build
+E="env -u GH_TOKEN -u GITHUB_TOKEN -u GH_ENTERPRISE_TOKEN"
+$E HUSKY=0 npm ci --ignore-scripts --no-audit --no-fund
+$E npx biome lint <changed .ts/.tsx/.js files>      # never --write
+$E npx biome format <changed .ts/.tsx/.js files>    # never --write
+$E npx tsc --noEmit
+$E npm run build
 cd - && git -C <repo> worktree remove --force "$wt" && rm -rf "$(dirname "$wt")"
 ```
 
@@ -234,7 +257,10 @@ Creating the routine is not part of this skill. These facts decide where the ski
 - **Submodules in cloud sessions: not documented, so do not depend on them.** The Claude Code docs say a cloud session (and every scheduled task, formerly a routine) starts from "a fresh clone of your repository" and that "each repository you add is cloned on every run". They say nothing about git submodules. The GitHub proxy also limits API requests and source archives to "the repositories attached to the session", even for public repositories. A routine on the root repo can therefore not count on `Bomberman-2.0/` and `Bomberman-2.0-Backend/` being on disk. Sources (read 2026-11-13): <https://code.claude.com/docs/en/cloud-environments> ("What carries over from your setup", "GitHub proxy"), <https://code.claude.com/docs/en/routines> ("Repositories and branch permissions").
 - **Root skills do not load inside a child repo.** Tested after Task 6: `claude -p` started in `Bomberman-2.0-Backend/` loads the root `CLAUDE.md` and rules, but lists no root project skills.
 - **Consequence:** a copy of this skill must live in each child repo (`.claude/skills/pr-review/SKILL.md`), so a routine on a child repo can run it. Keep the copies equal to this file. In a child repo, the skill uses the "Single repo" layout of Step 1 and reads the workspace docs and the other repo from GitHub.
-- A GitHub pull-request trigger starts the run at the PR head commit when the PR repo is the task's first repository. Attach both child repos to the task, so the GitHub proxy allows reads of the other repo.
+- **Never start the routine at the PR head.** A session loads `CLAUDE.md`, `.claude/settings.json` hooks, `.mcp.json` and this skill from the commit it starts on. A GitHub pull-request trigger starts the run at the PR head commit when the PR repo is the task's first repository. A malicious PR could then rewrite this skill or add a SessionStart hook, and run with the routine's GitHub credentials before any guard here applies. So:
+  - Use a **schedule trigger** on a trusted branch (`dev` of the child repo, or `main` of the workspace). Its prompt lists the open PRs and reviews each one: `/pr-review <PR URL> --auto` per PR. The skill reads each PR head only through `git fetch origin pull/<n>/head` (Step 2), never by checking it out.
+  - Do **not** use a GitHub pull-request trigger that starts at the PR head, and never one that fires for PRs from forks.
+  - Step 2 "Safe start" stops a run that started on an untrusted commit.
+- **Attach every repo the review reads:** both child repos and `NickDurnev/Bomberman-2.0-Workspace` (docs and rules). The GitHub proxy serves only attached repos. Without the workspace repo, Checks 1-2 go to Unverified and the verdict is COMMENT at most (Step 1). Until the workspace repo is published on GitHub, routines cannot read its docs.
 - Cloud sessions reject GraphQL. Use the GitHub MCP or `gh api` (REST), as in Step 2.
 - The `game-contract-reviewer` agent exists only in the workspace. In a child-repo routine, Check 2 runs without it and says so under Unverified.
-- The routine prompt: `/pr-review <PR URL> --auto`.
