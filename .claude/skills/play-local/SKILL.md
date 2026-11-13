@@ -44,6 +44,8 @@ Cloudinary: on a repeat login of an existing user, the backend calls `cloudinary
 1. In `player1` and `player2`, use `list_pages` and `select_page` to pick the game page. Use `navigate_page` to `http://localhost:3000` if needed. Seed the players first (see above). Confirm each shows the lobby.
 2. In `player1`, create a room. In `player2`, join it. Start the match. Use `take_snapshot`, `click` and `fill`.
 3. Play the scenario under test with both players. At least: both see each other avatar and name (`Player 1`, `Player 2`), and one bomb is placed and explodes on both screens.
+   The game reads keys once per frame (`isDown`). `press_key` sends keydown and keyup at once, so the game can miss the key, and no bomb or move happens. Hold the key with `evaluate_script` instead. This example holds Space for 250 ms. For a move, use `ArrowUp`, `ArrowDown`, `ArrowLeft` or `ArrowRight` (keyCode 38, 40, 37, 39):
+   `async () => { const o = { key: ' ', code: 'Space', keyCode: 32, which: 32, bubbles: true }; window.dispatchEvent(new KeyboardEvent('keydown', o)); await new Promise(r => setTimeout(r, 250)); window.dispatchEvent(new KeyboardEvent('keyup', o)); }`
 4. Run `list_console_messages` in both players. Read the backend log from `make dev`.
 5. Ghosting check. After a restart of the match, run this in each player with `evaluate_script`, for a few game events (for example `show bomb`, `detonate bomb`, `move player`):
    `async () => { const s = (await import('/src/utils/socket.ts')).default; return ['show bomb','detonate bomb','move player'].map(e => [e, s.listeners(e).length]); }`
