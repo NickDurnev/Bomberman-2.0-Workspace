@@ -32,6 +32,7 @@ Run `make help` to list them.
 | `make backend` | Backend on :4000 against local MongoDB. Rebuilds `dist` and restarts on every `src/` change |
 | `make frontend` | Frontend on :3000 against local backend |
 | `make dev` | MongoDB, backend and frontend |
+| `make browsers` / `make browsers-down` | Start / close the two Chrome windows (debug ports 9223, 9224) for `play-local` |
 
 ## Local dev
 

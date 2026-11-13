@@ -2,11 +2,11 @@
   "mcpServers": {
     "player1": {
       "command": "npx",
-      "args": ["@playwright/mcp@0.0.85", "--user-data-dir", "local/browser-profiles/player1"]
+      "args": ["chrome-devtools-mcp@1.13.0", "--browserUrl", "http://127.0.0.1:9223"]
     },
     "player2": {
       "command": "npx",
-      "args": ["@playwright/mcp@0.0.85", "--user-data-dir", "local/browser-profiles/player2"]
+      "args": ["chrome-devtools-mcp@1.13.0", "--browserUrl", "http://127.0.0.1:9224"]
     }
   }
 }
