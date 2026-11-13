@@ -59,7 +59,7 @@ A blast that touches another bomb detonates it. The client detects the overlap o
 
 Drop: for every blasted cell that is not a portal cell, the server rolls `SPOIL_CHANCE` 50 % and creates a `Spoil` with a uniform random type. The type is one of `SPEED`, `POWER`, `BOMBS`, plus `DELAY` when the game has `isDelaySpoilEnabled`.
 
-Display: the client draws a spoil only when the cell has `destroyed: true` (a box was broken). Spoils rolled for empty or wall cells stay in the server's `Game.spoils` but are never shown or picked. A blast through a cell that already shows a spoil removes that sprite on every client; the server keeps the entry.
+Display: the client draws a spoil only when the cell has `destroyed: true` (a box was broken). Spoils rolled for empty or wall cells stay in the server's `Game.spoils` but are never shown or picked. A blast through a cell that already shows a spoil removes that sprite on every client; the server keeps the entry (known bug, [backend #50](https://github.com/NickDurnev/Bomberman-2.0-Backend/issues/50)).
 
 Pick-up: the local player overlaps a spoil sprite → emits `pick up spoil` and destroys the sprite at once → the server deletes the spoil, applies it to its `Player` and broadcasts `spoil was picked` → each client removes the sprite, and the picker's client applies it to its local `Player`.
 
@@ -77,7 +77,7 @@ Pick-up: the local player overlaps a spoil sprite → emits `pick up spoil` and 
 Only when the game has `isPortalsEnabled`.
 
 - Portal cells are fixed per map: `SMALL_MAP_PORTAL_SPAWNS` / `DEFAULT_MAP_PORTAL_SPAWNS` in `Bomberman-2.0-Backend/src/constants.ts` (four cells each, all covered by boxes in the current maps). `Bomb` uses the small list when `mapName === "small_map"` and the default list otherwise.
-- A blast on a portal cell creates a `Portal` there instead of a spoil. Every later blast on that cell creates another `Portal` at the same cell (see [Discrepancies](#discrepancies-found-while-writing)).
+- A blast on a portal cell creates a `Portal` there instead of a spoil (known bug: repeated blasts create duplicates, [backend #48](https://github.com/NickDurnev/Bomberman-2.0-Backend/issues/48)).
 - Entering a portal: the client emits `use portal`, hides the player and disables its body and movement for `PORTAL_DELAY_STEP` 500 ms. The server needs at least two portals; it picks a random other portal and broadcasts `teleport player` with that cell's centre.
 - Cooldown: after the player enters a portal, the client ignores portal overlaps for `PORTAL_DELAY` 3000 ms.
 
@@ -96,7 +96,7 @@ Only when the game has `isPortalsEnabled`.
 | Win (last alive) | `POINTS_PER_WIN` | 3 |
 | Top 3 | `POINTS_PER_TOP3` | 1 |
 
-Top 3: when a death leaves exactly 3 players alive, the server calls `top3()` on **every** player in the game, the dead ones included. In a game that starts with 3 players nobody gets the flag. See [Discrepancies](#discrepancies-found-while-writing).
+Top 3: when a death leaves exactly 3 players alive, the server calls `top3()` on the players in the game (known bug: dead players get it too, [backend #49](https://github.com/NickDurnev/Bomberman-2.0-Backend/issues/49)).
 
 ## Game modes
 
@@ -109,12 +109,3 @@ Chosen by the host on `/map` (`Bomberman-2.0/src/routes/map/SelectMap.tsx` and i
 | `isDelaySpoilEnabled` | default off | `DELAY` joins the spoil pool |
 
 After a match the server creates the next pending game with the same three options. There is no singleplayer or bot mode on `dev`.
-
-## Discrepancies found while writing
-
-Code behaviour that looks unintended. Not fixed here and not verified at runtime. The list of earlier findings is in [architecture.md](architecture.md#known-discrepancies-in-the-code-dev).
-
-- **Duplicate portals.** `addToBlasted` creates a new `Portal` each time a blast covers a portal cell, also after the first portal exists. Each client then draws one more portal sprite on the same cell, and `use portal` can pick a portal on the same cell as the one entered.
-- **Top 3 for dead players.** `onPlayerDied` marks all players as top 3 when 3 remain alive, so players who already died also get the top-3 point.
-- **Invisible spoils.** Spoils rolled for empty or wall cells (and spoils burned by a blast on the client) stay in `Game.spoils` until the match ends.
-- **Bombs of a disconnected player.** The fuse queue is on the owner's connection. When the owner disconnects, `Play.destroy()` clears the queue, so that player's bombs stay on the map and explode only by a chain reaction.
