@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "player1": {
+      "command": "npx",
+      "args": ["@playwright/mcp@0.0.85", "--user-data-dir", "local/browser-profiles/player1"]
+    },
+    "player2": {
+      "command": "npx",
+      "args": ["@playwright/mcp@0.0.85", "--user-data-dir", "local/browser-profiles/player2"]
+    }
+  }
+}
