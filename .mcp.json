@@ -2,11 +2,11 @@
   "mcpServers": {
     "player1": {
       "command": "npx",
-      "args": ["chrome-devtools-mcp@1.13.0", "--browserUrl", "http://127.0.0.1:9223"]
+      "args": ["-y", "chrome-devtools-mcp@1.13.0", "--browserUrl", "http://127.0.0.1:9223"]
     },
     "player2": {
       "command": "npx",
-      "args": ["chrome-devtools-mcp@1.13.0", "--browserUrl", "http://127.0.0.1:9224"]
+      "args": ["-y", "chrome-devtools-mcp@1.13.0", "--browserUrl", "http://127.0.0.1:9224"]
     }
   }
 }

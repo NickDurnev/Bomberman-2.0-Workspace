@@ -13,7 +13,7 @@ The windows are normal Google Chrome with separate profiles in `local/browser-pr
 
 1. Run `make dev`. Wait until `:4000` and `:3000` answer.
 2. Run `make browsers`. It opens the two windows on `http://localhost:3000`. It skips a port that is already in use.
-3. Start Claude Code from the workspace root, so `.mcp.json` loads.
+3. Start Claude Code from the workspace root, so `.mcp.json` loads. The `player1` and `player2` servers attach when Claude starts or on the first tool call, so Chrome must be up first. If a tool reports that it cannot connect, run `make browsers` and retry.
 
 ## Rules
 
@@ -27,7 +27,7 @@ The windows are normal Google Chrome with separate profiles in `local/browser-pr
 
 1. In each window, log in by hand with Google. Use account A in `player1` and a different account B in `player2`.
 2. The sessions stay in the profile directories. Do this once per profile.
-3. If Google still refuses the login, stop and report it. Use the backend log and one manual check by the maintainer. Do not add a login bypass.
+3. If Google refuses the login, stop and report it. Use the backend log and one manual check by the maintainer. Do not add a login bypass.
 
 Known limit: on a repeat login of an existing user, the backend calls `cloudinary.uploader.destroy` without a guard (`Bomberman-2.0-Backend/src/controllers/auth.ts`). Local runs have Cloudinary unset, so this can fail. If it fails, report it. Do not patch product code.
 
@@ -39,7 +39,7 @@ Known limit: on a repeat login of an existing user, the backend calls `cloudinar
 4. Run `list_console_messages` in both players. Read the backend log from `make dev`.
 5. Ghosting check. After a restart of the match, run this in each player with `evaluate_script`, for a few game events (for example `show bomb`, `detonate bomb`, `move player`):
    `async () => { const s = (await import('/src/utils/socket.ts')).default; return ['show bomb','detonate bomb','move player'].map(e => [e, s.listeners(e).length]); }`
-   `clientSocket` is a module singleton, not a `window` property. This dynamic import returns the same instance on the Vite dev server. Restart again and repeat. The counts must not grow. If the import fails, skip this step and say so in the report. Do not change product code.
+   `clientSocket` is a module singleton, not a `window` property. This dynamic import returns the same instance on the Vite dev server. Reload the page before the check. Do not run it after a Vite hot update: a hot-update URL (`?t=`) gives a different module instance and a false pass. Restart again and repeat. The counts must not grow. If the import fails, skip this step and say so in the report. Do not change product code.
 6. Optional: if the change can affect frame rate, record a trace with `performance_start_trace` and `performance_stop_trace`.
 7. Close the windows with `make browsers-down`. Stop `make dev`. Run `make db-down`.
 

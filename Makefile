@@ -40,6 +40,17 @@ browsers: ## Start two Chrome windows (debug ports 9223, 9224) for play-local
 			echo "$$name: started on port $$port"; \
 		fi; \
 	done
+	@for pair in 9223:player1 9224:player2; do \
+		port=$${pair%%:*}; name=$${pair##*:}; ok=; \
+		for i in $$(seq 1 30); do \
+			if curl -s http://127.0.0.1:$$port/json/version >/dev/null 2>&1; then ok=1; break; fi; \
+			sleep 0.5; \
+		done; \
+		if [ -z "$$ok" ]; then \
+			echo "$$name: port $$port did not answer after 15 s. Chrome may already run with this profile without the debug port. Run 'make browsers-down' first, then retry." >&2; \
+			exit 1; \
+		fi; \
+	done
 
 browsers-down: ## Close only the two play-local Chrome windows
 	@for name in player1 player2; do \
