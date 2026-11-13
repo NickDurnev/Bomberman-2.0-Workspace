@@ -1,0 +1,8 @@
+[submodule "Bomberman-2.0"]
+	path = Bomberman-2.0
+	url = https://github.com/NickDurnev/Bomberman-2.0.git
+	branch = dev
+[submodule "Bomberman-2.0-Backend"]
+	path = Bomberman-2.0-Backend
+	url = https://github.com/NickDurnev/Bomberman-2.0-Backend.git
+	branch = dev
