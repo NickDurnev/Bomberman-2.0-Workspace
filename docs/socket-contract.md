@@ -98,7 +98,7 @@ Rules for new features:
 1. The client sends an intent or a collision report; the server decides the outcome and broadcasts it to the game room. The client renders shared entities only from server events. (Existing exceptions: the picker destroys a spoil sprite before `spoil was picked` arrives; the dying player hides itself before `show tombstone`.)
 2. The server must create the ids of new shared entities and send them in the payload, so every client can find the same sprite later.
 3. A chain reaction by blast (`detonate bomb by blast`) is an intended mechanic. Several clients can report the same bomb; the server detonates it once because `detonateBomb` deletes the bomb from `Game.bombs` and later reports find nothing.
-4. The server does not check that `playerId` in a payload is the sender. Any client can act for any player. Do not build features that rely on this being safe.
+4. A new or changed handler validates the payload shape and checks that `playerId` is the sender (`client.customId`) and that the sender is a player of `gameId`.
 
 ## Listener rule
 
@@ -109,11 +109,6 @@ The client socket is a singleton that survives React unmounts and Phaser scene r
 - Phaser scenes: bind in `create()`, store the pairs (see the `socketHandlers` table in `Bomberman-2.0/src/game/scenes/Playing.ts` and `boundLaunchGame` in `Bomberman-2.0/src/game/scenes/GameOver.ts`), and remove them in a handler registered with `this.events.once` for both `Phaser.Scenes.Events.SHUTDOWN` and `DESTROY`. `scene.remove()` does not call your own end-of-game code, so cleanup must hang on the scene events.
 - React: register in `useEffect` and remove the same `const` handlers in the effect cleanup.
 - Register a listener before you emit the event that triggers the reply (for example `Menu.tsx` registers `display pending games` before it emits `enter lobby`).
-
-Known violations on `dev` (not fixed here, the submodules are read-only for this doc):
-
-- `Bomberman-2.0/src/routes/pending/Pending.tsx` registers `start timer` with an inline arrow and passes a different new arrow to `off`, so that listener is never removed.
-- `Bomberman-2.0/src/routes/game/components/PlayerWinModal.tsx` registers `end game` and `player win` inside a 3-second `setTimeout`. If the component unmounts within 3 seconds, the cleanup runs first and the listeners are added later and never removed.
 
 ## Changing the contract
 

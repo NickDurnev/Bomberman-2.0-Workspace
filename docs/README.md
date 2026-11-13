@@ -30,5 +30,5 @@ Read 1–3 before any change. Then read the docs for the area you touch.
 ## Keeping docs true
 
 - Change the docs in the same change set as the code. `docs/socket-contract.md` is checked by `scripts/check-socket-contract.sh`; run it after any socket change.
-- Every value in these docs (timers, ranges, keys, file paths) comes from the code. If code and docs disagree, the code wins: fix the doc, or record the discrepancy if the code looks wrong.
+- Every value in these docs (timers, ranges, keys, file paths) comes from the code. If code and docs disagree, the code wins: fix the doc. If the code looks wrong, open an issue in the game repo; do not describe bugs in these docs.
 - Paths are relative to the workspace root and written in backticks. Links between docs are relative markdown links.

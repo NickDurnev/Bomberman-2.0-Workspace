@@ -12,7 +12,7 @@ Each map is a Tiled JSON file. There are two copies of every map, one per repo, 
 | `small_map` | `Bomberman-2.0-Backend/src/maps/small_map.json` | `Bomberman-2.0/public/assets/maps/small_map.json` |
 | tileset image | `Bomberman-2.0-Backend/src/maps/tileset.png` (not read by server code) | `Bomberman-2.0/public/assets/maps/tileset.png` |
 
-The server builds its collision grid from its copy; the client draws from its copy. Nothing checks that they agree. Today `default_map.json` differs in one tile between the repos (see [architecture.md](architecture.md#known-discrepancies-in-the-code-dev)). The two `tileset.png` files are not byte-identical; only the client one is drawn.
+The server builds its collision grid from its copy; the client draws from its copy. Nothing checks that they agree. The two `tileset.png` files are not byte-identical; only the client one is drawn.
 
 ## Format
 
@@ -48,7 +48,7 @@ Custom properties on the `Blocks` layer:
 
 ## Server: load and use
 
-1. `create game` carries `mapName`. `Game`'s constructor (`Bomberman-2.0-Backend/src/entity/game.ts`) runs ``require(`../maps/${mapName}.json`)`` and keeps `layers[0]` as `layer_info`. `mapName` is not validated (see [known-traps.md](known-traps.md#unvalidated-socket-payloads)).
+1. `create game` carries `mapName`. `Game`'s constructor (`Bomberman-2.0-Backend/src/entity/game.ts`) runs ``require(`../maps/${mapName}.json`)`` and keeps `layers[0]` as `layer_info`. A new map name must also be added to the names the client offers (see [Adding a map](#adding-a-map)).
 2. `require` caches the JSON, so every `Game` of one map shares the same `layer_info` object. Copy before you mutate anything from it (the constructor already copies `spawns` into `playerSpawns`).
 3. `createMapData` turns `data` into `shadow_map[row][col]` using the `wall` and `box` properties. Blasts read and change only `shadow_map`.
 4. `Bomb` chooses the portal cell list by name: `small_map` → `SMALL_MAP_PORTAL_SPAWNS`, any other name → `DEFAULT_MAP_PORTAL_SPAWNS`.

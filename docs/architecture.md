@@ -60,14 +60,3 @@ Menu (/)  ──host──▶  /map  ──create game──▶  /pending/:id  �
 
    Before it emits `end game`, the server creates a fresh pending game with the same settings and sends its id as `new_game_id`.
 7. **Restart.** On `end game`, `Playing` emits `leave game` and tears itself down; `RestartGameModal` stores `prevGameInfo` and `new_game_id` in sessionStorage and reloads the page. After the reload the modal shows the last results, emits `enter pending game` for the new id and runs the same timer/start flow as step 4 inside the modal.
-
-## Known discrepancies in the code (dev)
-
-These were found while writing these docs. They describe the code as it is; none is fixed here.
-
-- The time-limit `endGame` scheduled in `onStartGame` is never cancelled. When a match ends earlier, the timer still fires at 180 s: it creates another (orphan) pending game and emits `end game` to the old game room. Clients that sent `leave game` are no longer in that room, so the main visible effect is an extra empty pending game in the lobby until the lobby cleanup removes it. Not verified at runtime.
-- The running-game cleanup interval in `play.ts` calls `Lobby.deletePendingGame` with running game ids, so it never removes anything from `runningGames`.
-- `CustomSocket.socket_game_id` (set in `lobby.ts` on `enter pending game`) and `Play.socket_game_id` (set in `play.ts` on `start timer` / `start game`) are two separate fields with the same name.
-- `Bomberman-2.0/public/assets/maps/default_map.json` and `Bomberman-2.0-Backend/src/maps/default_map.json` differ in one tile: row 19, col 1 is a box on the server and empty on the client. This cell is also a portal spawn in `DEFAULT_MAP_PORTAL_SPAWNS`. `small_map.json` is identical in both repos.
-- The `GameOver` scene is registered but never started (`this.scene.start("GameOver")` is commented out in `Playing.ts`), so its `launch game` listener never runs.
-- Listener leaks in `Pending.tsx` and `PlayerWinModal.tsx`: see [socket-contract.md › Listener rule](socket-contract.md#listener-rule).

@@ -35,7 +35,7 @@ The HUD icon path is built from the HUD title: `/assets/${title.toLowerCase()}_i
 
 The `FireBlast` texture key comes from the server: `Bomb.detonate()` builds `type` as `explosion_<direction>`. A new blast piece needs a server change and a new `Preload` key with the same name.
 
-Animations are created per sprite instance with fixed keys (`bomb`, `blast`, `portal`) through `this.anims.create`. The `GameOver` scene uses a `background` key that is never loaded; that scene is not started today (see [architecture.md](architecture.md#known-discrepancies-in-the-code-dev)).
+Animations are created per sprite instance with fixed keys (`bomb`, `blast`, `portal`) through `this.anims.create`.
 
 ## Avatar and skin pipeline
 

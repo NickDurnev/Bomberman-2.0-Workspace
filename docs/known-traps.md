@@ -1,8 +1,6 @@
 # Known traps
 
-Classes of bugs this game has already had, or has open as known gaps. Each entry is **symptom → cause → rule**. Read this before you write new code and before you debug: most new bugs repeat one of these. The status line says what the `dev` code does today.
-
-This is not the list of current bugs. Current code discrepancies are in [architecture.md › Known discrepancies](architecture.md#known-discrepancies-in-the-code-dev) and in the `bug` issues of the two game repos.
+Classes of bugs this game has already had. Each entry is **symptom → cause → rule**. Read this before you write new code and before you debug: most new bugs repeat one of these. The status line says what the `dev` code does today.
 
 Sources: the 2026-06 audit (`Bomberman-2.0-BUG-REPORT.md`, outside this repo, items #1–#20) and the fixes merged after it.
 
@@ -14,7 +12,7 @@ Sources: the 2026-06 audit (`Bomberman-2.0-BUG-REPORT.md`, outside this repo, it
 
 **Rule.** Follow the [Listener rule](socket-contract.md#listener-rule): create each handler once, pass the same reference to `on` and `off`, never `.bind` or an arrow inline in `on`/`off`, hang Phaser cleanup on the scene `SHUTDOWN` and `DESTROY` events. When a timing bug "grows over time", count listeners (`clientSocket.listeners(event).length`) before you touch game logic.
 
-**Status.** Fixed in `Bomberman-2.0/src/game/scenes/Playing.ts` (the `socketHandlers` table), `Bomberman-2.0/src/game/scenes/GameOver.ts`, `Bomberman-2.0/src/routes/game/components/RestartGameModal.tsx` and `Bomberman-2.0/src/game/PhaserGame.tsx`. Two violations remain open in `Pending.tsx` and `PlayerWinModal.tsx` (listed in the Listener rule).
+**Status.** Fixed in `Bomberman-2.0/src/game/scenes/Playing.ts` (the `socketHandlers` table), `Bomberman-2.0/src/game/scenes/GameOver.ts`, `Bomberman-2.0/src/routes/game/components/RestartGameModal.tsx` and `Bomberman-2.0/src/game/PhaserGame.tsx`.
 
 ## Per-connection timers on the server
 
@@ -22,7 +20,7 @@ Sources: the 2026-06 audit (`Bomberman-2.0-BUG-REPORT.md`, outside this repo, it
 
 **Cause.** Each socket connection creates a `Play` instance whose constructor starts a 100 ms `setInterval` for the bomb queue. Nothing cleared it, so every connection and reconnect leaked one timer.
 
-**Rule.** Anything a connection starts (timers, intervals, subscriptions) must be released in the `disconnect` handler in `Bomberman-2.0-Backend/src/app.ts`, also for sockets that never joined a game. Do not keep shared match state on a per-connection object: it dies with that connection (today a disconnected player's bombs lose their fuse, [backend #51](https://github.com/NickDurnev/Bomberman-2.0-Backend/issues/51)).
+**Rule.** Anything a connection starts (timers, intervals, subscriptions) must be released in the `disconnect` handler in `Bomberman-2.0-Backend/src/app.ts`, also for sockets that never joined a game. Do not keep shared match state on a per-connection object: it dies with that connection.
 
 **Status.** Fixed: `Play.destroy()` clears the interval and runs on every disconnect.
 
@@ -97,20 +95,8 @@ Sources: the 2026-06 audit (`Bomberman-2.0-BUG-REPORT.md`, outside this repo, it
 
 **Rule.** When you change a shared constant or a map, change both repos in the same change set. The list is in [entities.md › Shared constants](entities.md#shared-constants) and [maps.md](maps.md#invariants).
 
-**Status.** `default_map.json` differs in one tile today (see [architecture.md](architecture.md#known-discrepancies-in-the-code-dev)).
+## Rules for new code
 
-## Known gaps (deferred)
-
-These are open on purpose: each needs a focused design and review. Do not make them worse, and do not build features that assume they are solved.
-
-### Unvalidated socket payloads
-
-Audit item #9. **Symptom:** none visible in normal play; a buggy or hostile client can act for another player or another game, send `NaN` coordinates, or crash a handler. **Cause:** the server reads every socket payload as is. Nothing checks that `playerId` is the sender (`client.customId`) or that the sender is in `gameId`. `mapName` from `create game` goes into a `require` path. **Rule:** a new or changed handler validates the payload shape and checks ownership (`playerId === client.customId`, sender is a player of the game). Do not widen what a client can claim (see [socket-contract.md › Authority rule](socket-contract.md#authority-rule)).
-
-### No `/auth` token verification
-
-Audit item #10. **Symptom:** none in normal play. **Cause:** `POST /api/v1/auth` trusts the `email` and `picture` in the body; there is no Google token check. Anyone can create a user or replace an existing user's picture. **Rule:** do not treat a `User` document or `email` as verified identity, and do not attach anything sensitive to it until the endpoint verifies a Google ID token.
-
-### Silent error swallows
-
-Audit item #11. **Symptom:** an operation fails and nothing tells the caller; the bug shows up later somewhere else. **Cause:** `storeSocketID`, `getUserBySocketId` (`Bomberman-2.0-Backend/src/services/socket.ts`) and `updatePlayerStats` (`Bomberman-2.0-Backend/src/services/stats.ts`) catch errors, log them and return normally. `getUserBySocketId` then returns `undefined` although callers treat the result as a user. **Rule:** new code returns or throws errors so the caller can act, and its types say when a value can be missing. Do not add new catch-and-log blocks.
+- **Socket payloads:** a new or changed handler validates the payload shape and checks ownership (`playerId === client.customId`, the sender is a player of the game). Do not widen what a client can claim (see [socket-contract.md › Authority rule](socket-contract.md#authority-rule)).
+- **Identity:** do not treat a `User` document or `email` from `POST /api/v1/auth` as verified identity, and do not attach anything sensitive to it.
+- **Errors:** new code returns or throws errors so the caller can act, and its types say when a value can be missing. Do not add catch-and-log blocks that return normally.

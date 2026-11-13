@@ -63,7 +63,7 @@ Ownership split: **speed** and **max bombs** exist only on the client (the serve
 
 ## Shared constants
 
-These values exist in both `Bomberman-2.0-Backend/src/constants.ts` and `Bomberman-2.0/src/utils/constants.ts` and must stay equal: `TILE_SIZE` (35), spoil types (`SPEED`/`POWER`/`BOMBS`/`DELAY`), `INITIAL_POWER`, `STEP_POWER`, `INITIAL_DELAY`, `STEP_DELAY`, `MIN_DELAY`, `GAME_DURATION`, `POINTS_PER_*`, and the lobby room id (`lobbyId` in `lobby.ts`, `LOBBY_ID` on the client, defined but not used). Map files exist in both repos too (`Bomberman-2.0-Backend/src/maps/`, `Bomberman-2.0/public/assets/maps/`); `default_map.json` currently differs in one tile (see [architecture.md](architecture.md#known-discrepancies-in-the-code-dev)). The client hard-codes the empty tile id 6 in `Playing.onDetonateBomb`.
+These values exist in both `Bomberman-2.0-Backend/src/constants.ts` and `Bomberman-2.0/src/utils/constants.ts` and must stay equal: `TILE_SIZE` (35), spoil types (`SPEED`/`POWER`/`BOMBS`/`DELAY`), `INITIAL_POWER`, `STEP_POWER`, `INITIAL_DELAY`, `STEP_DELAY`, `MIN_DELAY`, `GAME_DURATION`, `POINTS_PER_*`, and the lobby room id (`lobbyId` in `lobby.ts`, `LOBBY_ID` on the client, defined but not used). Map files exist in both repos too (`Bomberman-2.0-Backend/src/maps/`, `Bomberman-2.0/public/assets/maps/`). The client hard-codes the empty tile id 6 in `Playing.onDetonateBomb`.
 
 ## Adding an entity
 

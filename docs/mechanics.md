@@ -59,7 +59,7 @@ A blast that touches another bomb detonates it. The client detects the overlap o
 
 Drop: for every blasted cell that is not a portal cell, the server rolls `SPOIL_CHANCE` 50 % and creates a `Spoil` with a uniform random type. The type is one of `SPEED`, `POWER`, `BOMBS`, plus `DELAY` when the game has `isDelaySpoilEnabled`.
 
-Display: the client draws a spoil only when the cell has `destroyed: true` (a box was broken). Spoils rolled for empty or wall cells stay in the server's `Game.spoils` but are never shown or picked. A blast through a cell that already shows a spoil removes that sprite on every client; the server keeps the entry (known bug, [backend #50](https://github.com/NickDurnev/Bomberman-2.0-Backend/issues/50)).
+Display: the client draws a spoil only when the cell has `destroyed: true` (a box was broken). A blast through a cell that already shows a spoil removes that sprite on every client.
 
 Pick-up: the local player overlaps a spoil sprite → emits `pick up spoil` and destroys the sprite at once → the server deletes the spoil, applies it to its `Player` and broadcasts `spoil was picked` → each client removes the sprite, and the picker's client applies it to its local `Player`.
 
@@ -77,7 +77,7 @@ Pick-up: the local player overlaps a spoil sprite → emits `pick up spoil` and 
 Only when the game has `isPortalsEnabled`.
 
 - Portal cells are fixed per map: `SMALL_MAP_PORTAL_SPAWNS` / `DEFAULT_MAP_PORTAL_SPAWNS` in `Bomberman-2.0-Backend/src/constants.ts` (four cells each, all covered by boxes in the current maps). `Bomb` uses the small list when `mapName === "small_map"` and the default list otherwise.
-- A blast on a portal cell creates a `Portal` there instead of a spoil (known bug: repeated blasts create duplicates, [backend #48](https://github.com/NickDurnev/Bomberman-2.0-Backend/issues/48)).
+- A blast on a portal cell creates a `Portal` there instead of a spoil.
 - Entering a portal: the client emits `use portal`, hides the player and disables its body and movement for `PORTAL_DELAY_STEP` 500 ms. The server needs at least two portals; it picks a random other portal and broadcasts `teleport player` with that cell's centre.
 - Cooldown: after the player enters a portal, the client ignores portal overlaps for `PORTAL_DELAY` 3000 ms.
 
@@ -96,7 +96,7 @@ Only when the game has `isPortalsEnabled`.
 | Win (last alive) | `POINTS_PER_WIN` | 3 |
 | Top 3 | `POINTS_PER_TOP3` | 1 |
 
-Top 3: when a death leaves exactly 3 players alive, the server calls `top3()` on the players in the game (known bug: dead players get it too, [backend #49](https://github.com/NickDurnev/Bomberman-2.0-Backend/issues/49)).
+Top 3: when a death leaves exactly 3 players alive, the server calls `top3()` and the players get the top-3 point.
 
 ## Game modes
 
