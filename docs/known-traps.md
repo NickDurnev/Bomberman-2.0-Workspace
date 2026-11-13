@@ -58,11 +58,30 @@ Sources: the 2026-06 audit (`Bomberman-2.0-BUG-REPORT.md`, outside this repo, it
 
 **Symptom.** Two windows join the same game but the lobby shows one player, or one player disappears when the other joins. Stats or names attach to the wrong session.
 
-**Cause.** `Game.addPlayer` treats a player with the same `name` **and** `skin` as a re-join and replaces the old entry. Two sessions of one Google account match. Two tabs in one browser profile also share the localStorage `socket_id`, so they are the same player id. And the second session overwrites `User.socketID`.
+**Cause.** `Game.addPlayer` treats a player with the same id, or the same `name` **and** `skin`, as a re-join and replaces the old entry. Two sessions of one Google account match. Two tabs in one browser profile also share the localStorage `socket_id`, so they are the same player id. And the second session overwrites `User.socketID`.
 
 **Rule.** Test multiplayer with two players that differ in `email` and `name`, in separate browser profiles (the two `make browsers` windows; `play-local` seeds two mocked players). Do not change the dedup key without a replacement for the re-join case it covers.
 
 **Status.** Intended behaviour; keep it in mind when testing.
+
+## Duplicate players and a second Phaser game from a repeated effect
+
+**Symptom.** In dev, the pending room and the match show each player twice. The page has two game canvases, each scene listener count starts at 2, and one key press sends `create bomb` twice.
+
+**Cause.** `React.StrictMode` (in `Bomberman-2.0/src/main.tsx`) runs each effect twice in dev: mount, cleanup, mount. Two effects did work that their cleanup did not undo:
+
+- `Pending.tsx` emitted `enter pending game` on each run, and its cleanup does not leave the game.
+- `PhaserGame.tsx` created the `Phaser.Game` in the async `get current game` ack. The first cleanup ran before the first ack, so it destroyed nothing, and each ack created a game.
+
+On the server, `Game.addPlayer` did not catch the second join of the same id. It compared the stored `skin` (`""`) with the resolved one (`undefined` when no `User` document exists), so the re-join check missed.
+
+**Rule.**
+
+- An effect that emits or creates something must be safe to run twice. Guard a one-time emit with a ref, and let the cleanup cancel a pending async callback.
+- The server must not depend on a client sending an event once. A second join of the same player id is a re-join.
+- Compare normalized values: the value you compare must be the value you store.
+
+**Status.** Fixed in `Bomberman-2.0/src/routes/pending/Pending.tsx` (also its `start timer` listener, which `off` could not remove), `Bomberman-2.0/src/game/PhaserGame.tsx` and `Bomberman-2.0-Backend/src/entity/game.ts`. `get current game` is still sent twice in dev. It is a read, and only one game is created.
 
 ## New users silently not created (`/auth` 422)
 

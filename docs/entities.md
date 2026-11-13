@@ -27,7 +27,7 @@ Client sprites carry the server id in `id` so handlers can find them (`findById`
 - People: `players: Player[]`, `playerSpawns` (free spawn cells; a spawn is removed on join and returned on leave).
 - Live objects: `bombs`, `spoils`, `portals`, `tombstones`, all `Map<id, …>`. These serialise to `{}` in socket payloads; clients learn about them only through events.
 
-Responsibilities: add or remove players (a re-join with the same name and skin replaces the old entry), full/empty checks, map cell reads and writes for the blast, registries of bombs/spoils/portals/tombstones, and `processGameStats` at the end of a match.
+Responsibilities: add or remove players (a re-join with the same player id, or the same name and skin, replaces the old entry), full/empty checks, map cell reads and writes for the blast, registries of bombs/spoils/portals/tombstones, and `processGameStats` at the end of a match.
 
 ## Player
 
