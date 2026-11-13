@@ -1,0 +1,11 @@
+services:
+  mongo:
+    image: mongo:7
+    container_name: bomberman-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - bomberman-mongo-data:/data/db
+
+volumes:
+  bomberman-mongo-data:
