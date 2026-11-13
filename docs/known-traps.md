@@ -60,7 +60,7 @@ Sources: the 2026-06 audit (`Bomberman-2.0-BUG-REPORT.md`, outside this repo, it
 
 **Cause.** `Game.addPlayer` treats a player with the same `name` **and** `skin` as a re-join and replaces the old entry. Two sessions of one Google account match. Two tabs in one browser profile also share the localStorage `socket_id`, so they are the same player id. And the second session overwrites `User.socketID`.
 
-**Rule.** Test multiplayer with distinct Google accounts in separate browser profiles (the two `make browsers` windows). Do not change the dedup key without a replacement for the re-join case it covers.
+**Rule.** Test multiplayer with two players that differ in `email` and `name`, in separate browser profiles (the two `make browsers` windows; `play-local` seeds two mocked players). Do not change the dedup key without a replacement for the re-join case it covers.
 
 **Status.** Intended behaviour; keep it in mind when testing.
 

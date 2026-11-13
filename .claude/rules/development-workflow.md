@@ -56,7 +56,7 @@ npm run build
 
 ### Verify in the game
 
-For any gameplay, socket, map or asset change: run the `play-local` skill (`make dev`, local Docker Mongo, two Chrome windows from `make browsers` with **two different Google accounts**). Never run the backend against the production `DB_HOST`. State what you played and what you saw. If you could not verify in the game, say so in the PR.
+For any gameplay, socket, map or asset change: run the `play-local` skill (`make dev`, local Docker Mongo, two Chrome windows from `make browsers` with **two mocked players**, no Google login). Never run the backend against the production `DB_HOST`. State what you played and what you saw. If you could not verify in the game, say so in the PR.
 
 ### Docs
 

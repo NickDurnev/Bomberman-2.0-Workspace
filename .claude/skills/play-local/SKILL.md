@@ -1,13 +1,13 @@
 ---
 name: play-local
-description: Use to check a Bomberman change in the running game with two real players ("play locally", "test multiplayer", "verify in the browser", "play-local").
+description: Use to check a Bomberman change in the running game with two mocked players ("play locally", "test multiplayer", "verify in the browser", "play-local").
 ---
 
 # Play locally with two players
 
-Run the game on the local stack and play one room with two Chrome windows. Match flow: [docs/architecture.md](../../../docs/architecture.md).
+Run the game on the local stack and play one room with two Chrome windows. The players are mocked: the agent seeds each window with a test profile, so no Google login is needed. Match flow: [docs/architecture.md](../../../docs/architecture.md).
 
-The windows are normal Google Chrome with separate profiles in `local/browser-profiles/player1` and `player2`. The MCP servers `player1` and `player2` (Chrome DevTools MCP, see `.mcp.json`) attach to them on debug ports 9223 and 9224.
+The windows are normal Google Chrome with separate profiles (each has its own `localStorage`) in `local/browser-profiles/player1` and `player2`. The MCP servers `player1` and `player2` (Chrome DevTools MCP, see `.mcp.json`) attach to them on debug ports 9223 and 9224.
 
 ## Prerequisites
 
@@ -19,23 +19,31 @@ The windows are normal Google Chrome with separate profiles in `local/browser-pr
 
 - Never run against the production `DB_HOST`. `make dev` uses local MongoDB.
 - The debug ports listen on `127.0.0.1` only. While the windows are open, any local process can control them. Close them after the session (`make browsers-down`).
-- Navigate only to `http://localhost:3000`, and to Google sign-in pages during login. Never open any other site.
-- `local/` is gitignored. The profiles hold live Google session cookies. Never commit them, copy them, or paste cookies, tokens or profile data anywhere (chat, logs, PRs, issues, files).
-- Use two different throwaway Google accounts. Never use a personal or work account. Two players with one account collapse into one player (see [known-traps.md](../../../docs/known-traps.md#same-account-in-two-sessions-collapses-into-one-player)).
+- Navigate only to `http://localhost:3000`. Never open any other site.
+- `local/` is gitignored. Never commit it or paste profile data anywhere (chat, logs, PRs, issues, files).
+- Use the two test profiles below. They differ in `email` and `name`. Two players with the same name and picture collapse into one player (see [known-traps.md](../../../docs/known-traps.md#same-account-in-two-sessions-collapses-into-one-player)). Use only the `.local` test domain.
 
-## First run (maintainer)
+## Seed the mocked players
 
-1. In each window, log in by hand with Google. Use account A in `player1` and a different account B in `player2`.
-2. The sessions stay in the profile directories. Do this once per profile.
-3. If Google refuses the login, stop and report it. Use the backend log and one manual check by the maintainer. Do not add a login bypass.
+The app reads the user from `localStorage["google_user"]` on load. The local backend accepts the profile from the client. The `picture` is empty, so the client shows a random avatar.
 
-Known limit: on a repeat login of an existing user, the backend calls `cloudinary.uploader.destroy` without a guard (`Bomberman-2.0-Backend/src/controllers/auth.ts`). Local runs have Cloudinary unset, so this can fail. If it fails, report it. Do not patch product code.
+1. In `player1`, use `navigate_page` to `http://localhost:3000`. Run this with `evaluate_script`, then reload the page:
+   `() => localStorage.setItem("google_user", JSON.stringify({ email: "player1@test.local", name: "Player 1", picture: "", locale: "en-US" }))`
+2. In `player2`, do the same with this snippet:
+   `() => localStorage.setItem("google_user", JSON.stringify({ email: "player2@test.local", name: "Player 2", picture: "", locale: "en-US" }))`
+3. Confirm that each window shows the lobby and not the login screen.
+
+The local MongoDB gets the users `Player 1` and `Player 2`. This is fine, because it is local. To clear a window at the end, run `() => localStorage.removeItem("google_user")`. This is not required. `make browsers-reset` deletes both profiles.
+
+Limit: this works because the local backend accepts the profile from the client (`POST /api/v1/auth` does not verify a Google token). If `/auth` starts to verify Google tokens, this step stops working. Then a dev-only backend test login is needed.
+
+Cloudinary: on a repeat login of an existing user, the backend calls `cloudinary.uploader.destroy` only when the stored `User.picture` is not empty (`Bomberman-2.0-Backend/src/controllers/auth.ts`). The mocked players have an empty `picture`, so this caveat does not apply. If you change `picture` to a URL, a repeat login can fail with Cloudinary unset. If it fails, report it. Do not patch product code.
 
 ## Procedure
 
-1. In `player1` and `player2`, use `list_pages` and `select_page` to pick the game page. Use `navigate_page` to `http://localhost:3000` if needed. Confirm each is logged in.
+1. In `player1` and `player2`, use `list_pages` and `select_page` to pick the game page. Use `navigate_page` to `http://localhost:3000` if needed. Seed the players first (see above). Confirm each shows the lobby.
 2. In `player1`, create a room. In `player2`, join it. Start the match. Use `take_snapshot`, `click` and `fill`.
-3. Play the scenario under test with both players. At least: both see each other avatar and name, and one bomb is placed and explodes on both screens.
+3. Play the scenario under test with both players. At least: both see each other avatar and name (`Player 1`, `Player 2`), and one bomb is placed and explodes on both screens.
 4. Run `list_console_messages` in both players. Read the backend log from `make dev`.
 5. Ghosting check. After a restart of the match, run this in each player with `evaluate_script`, for a few game events (for example `show bomb`, `detonate bomb`, `move player`):
    `async () => { const s = (await import('/src/utils/socket.ts')).default; return ['show bomb','detonate bomb','move player'].map(e => [e, s.listeners(e).length]); }`

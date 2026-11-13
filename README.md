@@ -6,7 +6,7 @@ Workspace repo for the multiplayer Bomberman game. It holds only docs and agent 
 
 - Docker (with Docker Compose). Local MongoDB runs in a container on `127.0.0.1:27017`.
 - Node 22 and npm.
-- A Google OAuth client (web application) with `http://localhost:3000` as an authorised JavaScript origin. Login is Google only.
+- A Google OAuth client (web application) with `http://localhost:3000` as an authorised JavaScript origin. Login is Google only. The `play-local` skill does not need it: it seeds two mocked players.
 - `.env` files. Never commit them.
   - `Bomberman-2.0/.env`: copy `Bomberman-2.0/.env.example` and set `VITE_CLIENT_ID` to the OAuth client ID. `make frontend` sets `VITE_SERVER_BASE_URL` to the local backend.
   - `Bomberman-2.0-Backend/.env`: optional for local runs. `make backend` sets `DB_HOST` to the local MongoDB and leaves Cloudinary unset.

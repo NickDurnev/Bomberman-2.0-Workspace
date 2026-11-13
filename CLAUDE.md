@@ -33,6 +33,7 @@ Run `make help` to list them.
 | `make frontend` | Frontend on :3000 against local backend |
 | `make dev` | MongoDB, backend and frontend |
 | `make browsers` / `make browsers-down` | Start / close the two Chrome windows (debug ports 9223, 9224) for `play-local` |
+| `make browsers-reset` | Close the windows and delete both `play-local` profiles |
 
 ## Local dev
 

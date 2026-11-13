@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help setup db db-down backend frontend dev browsers browsers-down
+.PHONY: help setup db db-down backend frontend dev browsers browsers-down browsers-reset
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-14s %s\n", $$1, $$2}'
@@ -56,3 +56,7 @@ browsers-down: ## Close only the two play-local Chrome windows
 	@for name in player1 player2; do \
 		pkill -f -- "--user-data-dir=$(CURDIR)/local/browser-profiles/$$name( |$$)" && echo "$$name: closed" || echo "$$name: not running"; \
 	done
+
+browsers-reset: browsers-down ## Close the windows and delete the two play-local profiles
+	@rm -rf "$(CURDIR)/local/browser-profiles/player1" "$(CURDIR)/local/browser-profiles/player2"
+	@echo "play-local profiles deleted"
