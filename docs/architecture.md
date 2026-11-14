@@ -68,5 +68,7 @@ Menu (/)  ──host──▶  /map  ──create game──▶  /pending/:id  �
    - nobody left alive: `end game` after 2 s, stats processed;
    - time limit, or only one player left after a disconnect: `end game`, stats **not** processed.
 
+   A match ends once. The first ending wins, and `endGame` skips every later one (`endingGames`), for example the winner dying or a player leaving during the 5 s win delay, or the time limit after an early end. The time-limit end runs `GAME_DURATION` after the start; by then an ended match is no longer in `runningGames`, so it does nothing.
+
    Before it emits `end game`, the server creates a fresh pending game with the same settings and sends its id as `new_game_id`.
 7. **Restart.** On `end game`, `Playing` emits `leave game` and tears itself down; `RestartGameModal` stores `prevGameInfo` and `new_game_id` in sessionStorage and reloads the page. After the reload the modal shows the last results, emits `enter pending game` for the new id and runs the same timer/start flow as step 4 inside the modal.
