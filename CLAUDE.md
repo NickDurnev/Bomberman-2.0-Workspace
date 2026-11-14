@@ -13,6 +13,8 @@ Multiplayer Bomberman. This root repo holds docs and agent configuration only. T
 
 Both child repos use the `dev` branch as the base for PRs. The root repo uses `main`.
 
+Each child repo runs a `checks` CI job (Biome, `tsc`, build) on PRs to `dev`. A red `checks` blocks the merge.
+
 ## Layout
 
 - `docs/` - architecture, mechanics, entities, socket contract, maps, assets, known traps.

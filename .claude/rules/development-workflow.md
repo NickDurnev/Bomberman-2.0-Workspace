@@ -30,27 +30,29 @@ description: How to work on any change in the Bomberman workspace — before you
 
 ## After you finish
 
-Run these in **every repo you touched**. Never skip a step. Never commit with a NEW failure.
+Run these in **every repo you touched**. Never skip a step. Never commit with a failing check.
 
-`dev` already has Biome errors in both repos (no known `tsc` errors). Your change must add no NEW errors versus `origin/dev`:
+Each child repo runs a `checks` CI job (Biome, `tsc`, build) on every PR to `dev`. A red check blocks the merge. Run the same commands locally; each must exit 0:
 
-- Biome: run it only on the files you changed yourself. `<changed files>` is that list of paths (for example from `git diff --name-only origin/dev...HEAD` plus your uncommitted files). Never run Biome with `--write` on the whole repo: it rewrites many unrelated files.
-- `tsc`: compare the error list with the same command on `origin/dev`. An error that is also on `origin/dev` is not yours.
-- Do not fix unrelated errors in the same PR.
+- Fix lint and format in the files you changed: `npx biome check --write <changed files>` (`<changed files>` is, for example, `git diff --name-only origin/dev...HEAD` plus your uncommitted files). Never run `--write` on files you did not change.
+- `npm run check` is `biome ci .` on the whole repo, with no writes.
+- `npm run typecheck` is `tsc --noEmit`.
 
 ### Bomberman-2.0-Backend
 
 ```bash
-npx biome check --write <changed files>  # Biome lint + format, only your files
-npx tsc --noEmit                         # types; compare with origin/dev
+npx biome check --write <changed files>  # fix lint + format in your files
+npm run check                            # biome ci . — must exit 0
+npm run typecheck                        # tsc --noEmit — must exit 0
 npm run build                            # tsc + copy maps
 ```
 
 ### Bomberman-2.0 (frontend)
 
 ```bash
-npx biome check --write <changed files>  # Biome lint + format, only your files
-npx tsc --noEmit                         # types (vite build does NOT type-check); compare with origin/dev
+npx biome check --write <changed files>  # fix lint + format in your files
+npm run check                            # biome ci . — must exit 0
+npm run typecheck                        # tsc --noEmit — must exit 0 (vite build does NOT type-check)
 npm run build
 ```
 
