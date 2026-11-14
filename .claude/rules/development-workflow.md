@@ -54,6 +54,8 @@ npx tsc --noEmit                         # types (vite build does NOT type-check
 npm run build
 ```
 
+No tests in the frontend app. Do not add a test runner (Vitest, Jest, Testing Library) or test files to `Bomberman-2.0`, even when a skill (TDD, writing-plans) asks for tests. Verify frontend changes with the checks above and `play-local`. End-to-end tests will live in a separate e2e repo (planned).
+
 ### Verify in the game
 
 For any gameplay, socket, map or asset change: run the `play-local` skill (`make dev`, local Docker Mongo, two Chrome windows from `make browsers` with **two mocked players**, no Google login). Never run the backend against the production `DB_HOST`. State what you played and what you saw. If you could not verify in the game, say so in the PR.
