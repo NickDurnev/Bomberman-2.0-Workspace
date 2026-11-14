@@ -15,6 +15,8 @@ Both child repos use the `dev` branch as the base for PRs. The root repo uses `m
 
 Each child repo runs a `checks` CI job (Biome, `tsc`, build) on PRs to `dev`. A red `checks` blocks the merge.
 
+Rulesets in both child repos: `dev` and `main` accept changes only through a PR (no direct push, no force-push). A PR from another contributor needs the maintainer's approval.
+
 ## Layout
 
 - `docs/` - architecture, mechanics, entities, socket contract, maps, assets, known traps.
