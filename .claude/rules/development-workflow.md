@@ -32,7 +32,7 @@ description: How to work on any change in the Bomberman workspace — before you
 
 Run these in **every repo you touched**. Never skip a step. Never commit with a failing check.
 
-Each child repo runs a `checks` CI job (Biome, `tsc`, build) on every PR to `dev`. A red check blocks the merge. Run the same commands locally; each must exit 0:
+Each child repo runs a `checks` CI job (Biome, `tsc`, build) on every PR to `dev`. A red check blocks the merge. Run the same commands locally while you work; each must exit 0. Before the PR, `make ci` runs all of them in both repos (see Pre-PR review):
 
 - Fix lint and format in the files you changed: `npx biome check --write <changed files>` (`<changed files>` is, for example, `git diff --name-only origin/dev...HEAD` plus your uncommitted files). Never run `--write` on files you did not change.
 - `npm run check` is `biome ci .` on the whole repo, with no writes.
@@ -72,6 +72,7 @@ Run `sync-docs`: update `docs/` for anything the change made untrue (events, ent
 2. Self-review the diff against the `game-architecture` rule and the PR checklist. Fix every finding.
 3. If the change touches socket events, entities on both sides, or game state: dispatch **`game-contract-reviewer`** with only the target (branch names / "uncommitted"). Do not pass your summary or reasoning. Fix or answer every finding; list deferred ones in the PR.
 4. Re-run the checks above after fixes.
+5. **Run `make ci` in the workspace root and get it green before you open any PR**, also when you changed only one repo. It runs every step of the `checks` CI job (lint, format, types, build, and tests where the job has them) in **both** repos. If a step fails, fix it before you open the PR. If you changed a lockfile, run `make setup` first so the installed packages match it.
 
 ## Commits
 

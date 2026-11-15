@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help setup db db-down backend frontend dev browsers browsers-down browsers-reset
+.PHONY: help setup db db-down backend frontend dev ci browsers browsers-down browsers-reset
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-14s %s\n", $$1, $$2}'
@@ -26,6 +26,13 @@ frontend: ## Run frontend on :3000 against local backend
 
 dev: db ## Start MongoDB, backend and frontend
 	$(MAKE) -j2 backend frontend
+
+# The same steps as the `checks` CI job (.github/workflows/ci.yml) in each child repo,
+# run on the current checkout of both repos. Keep in sync with ci.yml.
+ci: ## Run every CI step in both repos (required before opening a PR)
+	cd Bomberman-2.0-Backend && npm run check && npm run typecheck && npm run build
+	cd Bomberman-2.0 && npm run check && npm run typecheck && VITE_CLIENT_ID=ci-placeholder VITE_SERVER_BASE_URL=http://localhost:4000 npm run build
+	@echo "ci: all steps passed in both repos"
 
 # Two normal Chrome windows with separate profiles for the play-local skill.
 # Debug ports listen on 127.0.0.1 only. `open` starts the app with cwd /, so paths are absolute.
