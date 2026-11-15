@@ -6,3 +6,7 @@
 	path = Bomberman-2.0-Backend
 	url = https://github.com/NickDurnev/Bomberman-2.0-Backend.git
 	branch = dev
+[submodule "Bomberman-2.0-E2E"]
+	path = Bomberman-2.0-E2E
+	url = https://github.com/NickDurnev/Bomberman-2.0-E2E.git
+	branch = main
