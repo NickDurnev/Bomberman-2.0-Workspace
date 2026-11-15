@@ -15,7 +15,7 @@ Both child repos use the `dev` branch as the base for PRs. The root repo uses `m
 
 Each child repo runs a `checks` CI job (Biome, `tsc`, build; the backend job also runs `npm test`) on PRs to `dev`. A red `checks` blocks the merge.
 
-Rulesets in both child repos: `dev` and `main` accept changes only through a PR (no direct push, no force-push). A PR from another contributor needs the maintainer's approval.
+Rulesets in both child repos: `dev` and `main` accept changes only through a PR, for everyone (no direct push, no force-push). A PR needs 1 approval from a code owner (`.github/CODEOWNERS`: the maintainer); only the repository admin can bypass the approval. `checks` must pass on `dev`, and nobody can bypass it.
 
 ## Layout
 
