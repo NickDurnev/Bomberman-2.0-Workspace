@@ -17,8 +17,8 @@ db: ## Start local MongoDB (docker) and wait until healthy
 db-down: ## Stop local MongoDB
 	docker compose down
 
-# The backend resolves its @aliases (module-alias) from ./dist, so `npm run dev` (ts-node)
-# would run stale dist code. Rebuild dist and restart on every src change instead.
+# The backend resolves its @aliases (module-alias) from ./dist, so rebuild dist and
+# restart on every src change.
 backend: ## Run backend on :4000 against local MongoDB (never production); rebuilds dist on src change
 	cd Bomberman-2.0-Backend && DB_HOST=mongodb://localhost:27017/bomberman CLOUDINARY_CLOUD_NAME= CLOUDINARY_API_KEY= CLOUDINARY_API_SECRET= npx nodemon --watch src --ext ts,json --exec 'npm run build && node dist/app.js'
 

@@ -53,7 +53,7 @@ Custom properties on the `Blocks` layer:
 3. `createMapData` turns `data` into `shadow_map[row][col]` using the `wall` and `box` properties. Blasts read and change only `shadow_map`.
 4. `Bomb` chooses the portal cell list by name: `small_map` → `SMALL_MAP_PORTAL_SPAWNS`, any other name → `DEFAULT_MAP_PORTAL_SPAWNS`.
 
-**Build step.** `tsc` does not copy JSON. The backend `postbuild` script (`copyfiles -u 1 src/maps/* dist`, run after `npm run build`) copies the maps to `dist/maps/`, where the compiled `dist/entity/game.js` finds them. `make backend` runs this build on every change in `src/`, so local runs also read the maps from `dist/maps/`. Only a plain `npm run dev` (`ts-node`) reads them from `src/maps/`. A new map file in `src/maps/` reaches production only through this step.
+**Build step.** `tsc` does not copy JSON. The backend `postbuild` script (`copyfiles -u 1 src/maps/* dist`, run after `npm run build`) copies the maps to `dist/maps/`, where the compiled `dist/entity/game.js` finds them. `make backend` runs this build on every change in `src/`, so local runs also read the maps from `dist/maps/`. A new map file in `src/maps/` reaches production only through this step.
 
 ## Client: get and draw
 

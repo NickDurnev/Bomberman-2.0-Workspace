@@ -16,6 +16,8 @@ Multiplayer Bomberman. This root repo holds docs and agent configuration only. T
 
 Each child repo runs a `checks` CI job (Biome, `tsc`, build; the backend job also runs `npm test`) on PRs to `dev` (E2E repo: Biome and `tsc` on PRs to `main`). A red `checks` blocks the merge. The E2E suite runs only by hand: the `E2E` workflow (`workflow_dispatch`) or `/e2e`.
 
+Dependabot in each child repo (`.github/dependabot.yml`) opens weekly grouped version PRs: frontend and backend to `dev`, E2E to `main`. It ignores Phaser majors (frontend) and `@types/node` majors (backend, E2E: it must match the Node 22 runtime).
+
 Rulesets in all child repos: `dev` and `main` accept changes only through a PR, for everyone (no direct push, no force-push). A PR needs 1 approval from a code owner (`.github/CODEOWNERS`: the maintainer); only the repository admin can bypass the approval. `checks` must pass on `dev` (E2E repo: on `main`), and nobody can bypass it.
 
 ## Layout
@@ -48,8 +50,7 @@ Run `make help` to list them.
 
 - On a fresh clone, run `make setup` first.
 - The backend `package.json` `_moduleAliases` point at `./dist`. Aliased imports (`@entity`, `@constants`, ...) load from `dist`, not `src`.
-- So `make backend` does not use `npm run dev` (ts-node would run old `dist` code). It runs nodemon, which runs `npm run build && node dist/app.js` on every change in `src/`.
-- Do not run the backend with `npm run dev`. A new or changed aliased module has no effect there until the next build.
+- So `make backend` runs nodemon, which runs `npm run build && node dist/app.js` on every change in `src/`.
 - Local runs always use Docker Mongo. Never use the production `DB_HOST`.
 
 ## Rules
