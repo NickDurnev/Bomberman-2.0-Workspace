@@ -49,7 +49,7 @@ Run `make help` to list them.
 ## Local dev
 
 - On a fresh clone, run `make setup` first.
-- The backend `package.json` `_moduleAliases` point at `./dist`. Aliased imports (`@entity`, `@constants`, ...) load from `dist`, not `src`.
+- The backend `package.json` `_moduleAliases` point at `./dist`. Aliased imports (`@/entity/game`, `@/constants`, ...) load from `dist`, not `src`.
 - So `make backend` runs nodemon, which runs `npm run build && node dist/app.js` on every change in `src/`.
 - Local runs always use Docker Mongo. Never use the production `DB_HOST`.
 

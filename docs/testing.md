@@ -23,7 +23,7 @@ Run these in `Bomberman-2.0-Backend/`:
 
 ## Setup
 
-- `vitest.config.ts` maps every `tsconfig.json` path alias (`@entity`, `@constants`, ...) to `src/`, never to `dist/`.
+- `vitest.config.ts` maps every `tsconfig.json` path alias (`@/`) to `src/`, never to `dist/`.
 - `test/setup/global.ts` runs before each test file. It sets `DB_HOST` to a closed-port placeholder and sets the Cloudinary variables to `""`.
 - Never use `.env`. Tests use only `mongodb-memory-server`.
 - Tests never import `src/app.ts`. `startTestServer()` builds the server from `src/db` and `src/server`.
