@@ -19,6 +19,7 @@ Format, invariants and the add-a-map steps: [docs/maps.md](../../../docs/maps.md
 ## Verify
 
 - Backend and frontend checks pass in each repo you touched (`.claude/rules/development-workflow.md` › After you finish).
+- Backend test added or updated (`docs/testing.md`), `npm test` passes.
 - The diff in step 4 shows no new difference.
 - Walls enclose the playable area. `spawns` has at least `max_players` entries.
 - Run `play-local` with two different accounts on the map. Check spawns, boxes, and portal cells.

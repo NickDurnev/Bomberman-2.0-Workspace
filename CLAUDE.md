@@ -13,7 +13,7 @@ Multiplayer Bomberman. This root repo holds docs and agent configuration only. T
 
 Both child repos use the `dev` branch as the base for PRs. The root repo uses `main`.
 
-Each child repo runs a `checks` CI job (Biome, `tsc`, build) on PRs to `dev`. A red `checks` blocks the merge.
+Each child repo runs a `checks` CI job (Biome, `tsc`, build; the backend job also runs `npm test`) on PRs to `dev`. A red `checks` blocks the merge.
 
 Rulesets in both child repos: `dev` and `main` accept changes only through a PR (no direct push, no force-push). A PR from another contributor needs the maintainer's approval.
 

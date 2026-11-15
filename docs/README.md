@@ -14,6 +14,7 @@ Read 1–3 before any change. Then read the docs for the area you touch.
 6. [socket-contract.md](socket-contract.md): every socket event, the handshake, the authority rule and the listener rule.
 7. [maps.md](maps.md): Tiled map format, how each side loads a map, map invariants.
 8. [assets.md](assets.md): asset folders, `Preload` keys, sprite sizes, the avatar pipeline.
+9. [testing.md](testing.md): the backend test suite, how to run it, the helpers, where a new test goes.
 
 ## By task
 
@@ -24,6 +25,7 @@ Read 1–3 before any change. Then read the docs for the area you touch.
 | Add or change a socket event | socket-contract › Changing the contract, known-traps |
 | Edit or add a map | maps › Adding a map, mechanics › Portals |
 | Add or replace sprites, avatars | assets › Changing assets |
+| Write or change a backend test | testing, mechanics, socket-contract |
 | Debug a bug | known-traps first, then the docs of the area |
 | Add a game mode or bots | architecture, mechanics, socket-contract › Authority rule |
 

@@ -32,7 +32,7 @@ description: How to work on any change in the Bomberman workspace — before you
 
 Run these in **every repo you touched**. Never skip a step. Never commit with a failing check.
 
-Each child repo runs a `checks` CI job (Biome, `tsc`, build) on every PR to `dev`. A red check blocks the merge. Run the same commands locally while you work; each must exit 0. Before the PR, `make ci` runs all of them in both repos (see Pre-PR review):
+Each child repo runs a `checks` CI job (Biome, `tsc`, build) and the backend tests on every PR to `dev`. A red check blocks the merge. Run the same commands locally while you work; each must exit 0. Before the PR, `make ci` runs all of them in both repos (see Pre-PR review):
 
 - Fix lint and format in the files you changed: `npx biome check --write <changed files>` (`<changed files>` is, for example, `git diff --name-only origin/dev...HEAD` plus your uncommitted files). Never run `--write` on files you did not change.
 - `npm run check` is `biome ci .` on the whole repo, with no writes.
@@ -44,6 +44,7 @@ Each child repo runs a `checks` CI job (Biome, `tsc`, build) on every PR to `dev
 npx biome check --write <changed files>  # fix lint + format in your files
 npm run check                            # biome ci . — must exit 0
 npm run typecheck                        # tsc --noEmit — must exit 0
+npm test                                 # vitest — must exit 0
 npm run build                            # tsc + copy maps
 ```
 
@@ -55,6 +56,8 @@ npm run check                            # biome ci . — must exit 0
 npm run typecheck                        # tsc --noEmit — must exit 0 (vite build does NOT type-check)
 npm run build
 ```
+
+A change to backend game logic, a socket event or an HTTP route adds or updates a test in the same PR. TDD applies in the backend; the frontend still has no tests. See `docs/testing.md`.
 
 No tests in the frontend app. Do not add a test runner (Vitest, Jest, Testing Library) or test files to `Bomberman-2.0`, even when a skill (TDD, writing-plans) asks for tests. Verify frontend changes with the checks above and `play-local`. End-to-end tests will live in a separate e2e repo (planned).
 

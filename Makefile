@@ -30,7 +30,7 @@ dev: db ## Start MongoDB, backend and frontend
 # The same steps as the `checks` CI job (.github/workflows/ci.yml) in each child repo,
 # run on the current checkout of both repos. Keep in sync with ci.yml.
 ci: ## Run every CI step in both repos (required before opening a PR)
-	cd Bomberman-2.0-Backend && npm run check && npm run typecheck && npm run build
+	cd Bomberman-2.0-Backend && npm run check && npm run typecheck && npm test && npm run build
 	cd Bomberman-2.0 && npm run check && npm run typecheck && VITE_CLIENT_ID=ci-placeholder VITE_SERVER_BASE_URL=http://localhost:4000 npm run build
 	@echo "ci: all steps passed in both repos"
 
