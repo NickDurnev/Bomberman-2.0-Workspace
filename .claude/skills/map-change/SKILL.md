@@ -20,6 +20,7 @@ Format, invariants and the add-a-map steps: [docs/maps.md](../../../docs/maps.md
 
 - Backend and frontend checks pass in each repo you touched (`.claude/rules/development-workflow.md` › After you finish).
 - Backend test added or updated (`docs/testing.md`), `npm test` passes.
+- E2E impact checked (`development-workflow` › Keep E2E in sync after behaviour changes); companion E2E PR opened if a spec is affected.
 - The diff in step 4 shows no new difference.
 - Walls enclose the playable area. `spawns` has at least `max_players` entries.
 - Run `play-local` with two different accounts on the map. Check spawns, boxes, and portal cells.

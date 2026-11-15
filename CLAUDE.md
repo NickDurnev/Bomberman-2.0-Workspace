@@ -1,6 +1,6 @@
 # Bomberman workspace
 
-Multiplayer Bomberman. This root repo holds docs and agent configuration only. The game code lives in two git submodules.
+Multiplayer Bomberman. This root repo holds docs and agent configuration only. The game code lives in two git submodules; the E2E suite lives in a third.
 
 **Start at `docs/README.md`.** Read its reading order before any change.
 
@@ -10,12 +10,13 @@ Multiplayer Bomberman. This root repo holds docs and agent configuration only. T
 | --- | --- | --- | --- |
 | `Bomberman-2.0/` | `NickDurnev/Bomberman-2.0` | React, Phaser 3, Vite | Client: mirrors state and renders |
 | `Bomberman-2.0-Backend/` | `NickDurnev/Bomberman-2.0-Backend` | Express, socket.io, MongoDB | Server: authoritative for game state |
+| `Bomberman-2.0-E2E/` | `NickDurnev/Bomberman-2.0-E2E` | Playwright | E2E suite: two players play real matches against the local stack |
 
-Both child repos use the `dev` branch as the base for PRs. The root repo uses `main`.
+`Bomberman-2.0` and `Bomberman-2.0-Backend` use the `dev` branch as the base for PRs. `Bomberman-2.0-E2E` and the root repo use `main`.
 
-Each child repo runs a `checks` CI job (Biome, `tsc`, build; the backend job also runs `npm test`) on PRs to `dev`. A red `checks` blocks the merge.
+Each child repo runs a `checks` CI job (Biome, `tsc`, build; the backend job also runs `npm test`) on PRs to `dev` (E2E repo: Biome and `tsc` on PRs to `main`). A red `checks` blocks the merge. The E2E suite runs only by hand: the `E2E` workflow (`workflow_dispatch`) or `/e2e`.
 
-Rulesets in both child repos: `dev` and `main` accept changes only through a PR, for everyone (no direct push, no force-push). A PR needs 1 approval from a code owner (`.github/CODEOWNERS`: the maintainer); only the repository admin can bypass the approval. `checks` must pass on `dev`, and nobody can bypass it.
+Rulesets in all child repos: `dev` and `main` accept changes only through a PR, for everyone (no direct push, no force-push). A PR needs 1 approval from a code owner (`.github/CODEOWNERS`: the maintainer); only the repository admin can bypass the approval. `checks` must pass on `dev` (E2E repo: on `main`), and nobody can bypass it.
 
 ## Layout
 
@@ -23,6 +24,7 @@ Rulesets in both child repos: `dev` and `main` accept changes only through a PR,
 - `scripts/check-socket-contract.sh` - checks `docs/socket-contract.md` against the code.
 - `Makefile`, `docker-compose.yml` - local dev (Mongo in Docker).
 - `.claude/rules/` - rules loaded in every session (see below).
+- `.claude/commands/e2e.md` - `/e2e`: routes to the E2E skill in `Bomberman-2.0-E2E/.claude/skills/e2e/` (run, status, stop, fix, CI run, add a spec).
 - `.github/dependabot.yml` - daily PR that bumps the submodule pointers to the latest `dev`.
 - `local/` - specs and plans. Gitignored. Never commit it.
 
@@ -32,12 +34,13 @@ Run `make help` to list them.
 
 | Target | Action |
 | --- | --- |
-| `make setup` | Init submodules, install deps, build backend `dist` |
+| `make setup` | Init submodules, install deps (and Playwright Chromium), build backend `dist` |
 | `make db` / `make db-down` | Start / stop local MongoDB |
 | `make backend` | Backend on :4000 against local MongoDB. Rebuilds `dist` and restarts on every `src/` change |
 | `make frontend` | Frontend on :3000 against local backend |
 | `make dev` | MongoDB, backend and frontend |
-| `make ci` | Every step of the `checks` CI job in both repos. Required before opening a PR |
+| `make ci` | Every step of the `checks` CI job in every repo. Required before opening a PR |
+| `make e2e` | The E2E suite against a fresh local stack (stop `make dev` first) |
 | `make browsers` / `make browsers-down` | Start / close the two Chrome windows (debug ports 9223, 9224) for `play-local` |
 | `make browsers-reset` | Close the windows and delete both `play-local` profiles |
 

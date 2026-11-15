@@ -22,6 +22,7 @@ The contract is [docs/socket-contract.md](../../../docs/socket-contract.md). The
 - `./scripts/check-socket-contract.sh` exits 0.
 - Backend and frontend checks pass in each repo you touched (`.claude/rules/development-workflow.md` › After you finish).
 - Backend test added or updated (`docs/testing.md`), `npm test` passes.
+- E2E impact checked (`development-workflow` › Keep E2E in sync after behaviour changes); companion E2E PR opened if a spec is affected.
 - Every listener has a matching `off` with the same function reference.
 - Run `play-local` with two different accounts. Trigger the event twice in a row. Each handler runs once per event (no ghosting).
 - Dispatch `game-contract-reviewer` before the PR.

@@ -23,6 +23,7 @@ Read first: [docs/mechanics.md](../../../docs/mechanics.md), [docs/entities.md](
 
 - Backend and frontend checks pass in each repo you touched (`.claude/rules/development-workflow.md` › After you finish).
 - Backend test added or updated (`docs/testing.md`), `npm test` passes.
+- E2E impact checked (`development-workflow` › Keep E2E in sync after behaviour changes); companion E2E PR opened if a spec is affected.
 - `./scripts/check-socket-contract.sh` exits 0.
 - Run `play-local` with two different accounts. The entity appears for both players, and the server state agrees with the client. State what you played and saw.
 - Tell the reviewer: dispatch `game-contract-reviewer` before the PR (`development-workflow` › Pre-PR review).
