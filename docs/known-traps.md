@@ -20,7 +20,7 @@ Sources: the 2026-06 audit (`Bomberman-2.0-BUG-REPORT.md`, outside this repo, it
 
 **Cause.** Each socket connection creates a `Play` instance whose constructor starts a 100 ms `setInterval` for the bomb queue. Nothing cleared it, so every connection and reconnect leaked one timer.
 
-**Rule.** Anything a connection starts (timers, intervals, subscriptions) must be released in the `disconnect` handler in `Bomberman-2.0-Backend/src/app.ts`, also for sockets that never joined a game. Do not keep shared match state on a per-connection object: it dies with that connection.
+**Rule.** Anything a connection starts (timers, intervals, subscriptions) must be released in the `disconnect` handler in `Bomberman-2.0-Backend/src/server.ts`, also for sockets that never joined a game. Do not keep shared match state on a per-connection object: it dies with that connection.
 
 **Status.** Fixed: `Play.destroy()` clears the interval and runs on every disconnect.
 

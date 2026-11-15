@@ -7,13 +7,13 @@ Every socket.io event exchanged between the client (`Bomberman-2.0`) and the ser
 ## Transport and identity
 
 - One socket per browser tab. The client creates it once at module load in `Bomberman-2.0/src/utils/socket.ts` and every React component and Phaser scene imports that singleton. The socket outlives route changes and Phaser scene restarts, so a listener that is not removed keeps firing in the next round (see [Listener rule](#listener-rule)).
-- The server wires all handlers per connection in `Bomberman-2.0-Backend/src/app.ts`. Lobby handlers live in `Bomberman-2.0-Backend/src/lobby.ts`; gameplay handlers live on a per-connection `Play` instance (`Bomberman-2.0-Backend/src/play.ts`).
+- The server wires all handlers per connection in `Bomberman-2.0-Backend/src/server.ts`. Lobby handlers live in `Bomberman-2.0-Backend/src/lobby.ts`; gameplay handlers live on a per-connection `Play` instance (`Bomberman-2.0-Backend/src/play.ts`).
 
 ### Handshake `auth`
 
 Identity travels in the socket.io handshake, so the server knows who the player is before any event handler runs and again on every reconnect. This replaced an earlier race where a player could join a game before `updateUserSocketId` was processed.
 
-| `auth` field | Source on the client | Use on the server (`app.ts`) |
+| `auth` field | Source on the client | Use on the server (`server.ts`) |
 | --- | --- | --- |
 | `socketId` | `getOrCreateSocketId()`: a UUID stored in localStorage under `socket_id`, created once and reused | `client.customId`. This is the player id everywhere in game state; it is **not** socket.io's `client.id`. |
 | `email` | `google_user` in localStorage | `storeSocketID(email, socketId)` writes the id to the `User` document in MongoDB |
@@ -37,19 +37,19 @@ Direction: `C→S` client to server, `S→C` server to client, `both` when the s
 <!-- socket-contract:begin -->
 | event | direction | payload shape | emitter file | handler file(s) |
 | --- | --- | --- | --- | --- |
-| `updateUserSocketId` | C→S | `{ email, name, picture, socket_id }` | `Bomberman-2.0/src/components/Socket.tsx` (on login and on every `connect`) | `Bomberman-2.0-Backend/src/app.ts` (inline; `storeSocketID` in `Bomberman-2.0-Backend/src/services/socket.ts`) |
+| `updateUserSocketId` | C→S | `{ email, name, picture, socket_id }` | `Bomberman-2.0/src/components/Socket.tsx` (on login and on every `connect`) | `Bomberman-2.0-Backend/src/server.ts` (inline; `storeSocketID` in `Bomberman-2.0-Backend/src/services/socket.ts`) |
 | `enter lobby` | C→S | no data; ack `(games: Game[])` with the pending games that are not full | `Bomberman-2.0/src/routes/menu/Menu.tsx` | `Bomberman-2.0-Backend/src/lobby.ts` `onEnterLobby` (joins `lobby_room`) |
 | `leave lobby` | C→S | none | `Bomberman-2.0/src/routes/menu/Menu.tsx`, `Bomberman-2.0/src/routes/menu/components/GameForm.tsx` | `Bomberman-2.0-Backend/src/lobby.ts` `onLeaveLobby` |
 | `check game name` | C→S | `gameName: string`; ack `({ isAvailable: boolean })` | `Bomberman-2.0/src/routes/menu/components/GameForm.tsx` | `Bomberman-2.0-Backend/src/lobby.ts` `onCheckNameAvailable` |
 | `create game` | C→S | `{ mapName, isPortalsEnabled, isDelaySpoilEnabled, gameName }`; ack `({ game_id })` | `Bomberman-2.0/src/routes/map/SelectMap.tsx` | `Bomberman-2.0-Backend/src/lobby.ts` `onCreateGame` (creator is not added; it navigates to the pending page and sends `enter pending game`) |
 | `display pending games` | S→C | `Game[]` (pending games that are not full), to `lobby_room` | `Bomberman-2.0-Backend/src/lobby.ts` `updateLobbyGames` | `Bomberman-2.0/src/routes/menu/Menu.tsx` |
 | `enter pending game` | C→S | `game_id: string` | `Bomberman-2.0/src/routes/pending/Pending.tsx`, `Bomberman-2.0/src/routes/game/components/RestartGameModal.tsx` | `Bomberman-2.0-Backend/src/lobby.ts` `onEnterPendingGame` (joins game room, `addPlayer`) |
-| `leave pending game` | C→S | none (server uses `socket.socket_game_id`) | `Bomberman-2.0/src/routes/pending/Pending.tsx`, `Bomberman-2.0/src/routes/game/components/RestartGameModal.tsx`, `Bomberman-2.0/src/components/UserBar.tsx` | `Bomberman-2.0-Backend/src/lobby.ts` `onLeavePendingGame` (also called on `disconnect` from `Bomberman-2.0-Backend/src/app.ts`) |
+| `leave pending game` | C→S | none (server uses `socket.socket_game_id`) | `Bomberman-2.0/src/routes/pending/Pending.tsx`, `Bomberman-2.0/src/routes/game/components/RestartGameModal.tsx`, `Bomberman-2.0/src/components/UserBar.tsx` | `Bomberman-2.0-Backend/src/lobby.ts` `onLeavePendingGame` (also called on `disconnect` from `Bomberman-2.0-Backend/src/server.ts`) |
 | `update game` | S→C | `{ current_game: Game }`, to the game room | `Bomberman-2.0-Backend/src/lobby.ts` `updateCurrentGame` | `Bomberman-2.0/src/routes/pending/Pending.tsx`, `Bomberman-2.0/src/routes/game/components/RestartGameModal.tsx` |
 | `start timer` | both | C→S: `game_id: string`. S→C: no payload, to the game room | C→S: `Bomberman-2.0/src/routes/pending/Pending.tsx`, `Bomberman-2.0/src/routes/game/components/RestartGameModal.tsx`; S→C: `Bomberman-2.0-Backend/src/play.ts` `onStartTimer` | S: `Bomberman-2.0-Backend/src/play.ts` `onStartTimer`; C: `Bomberman-2.0/src/routes/pending/Pending.tsx`, `Bomberman-2.0/src/routes/game/components/RestartGameModal.tsx` |
 | `start game` | C→S | `game_id: string` | `Bomberman-2.0/src/routes/pending/Pending.tsx`, `Bomberman-2.0/src/routes/game/components/RestartGameModal.tsx` | `Bomberman-2.0-Backend/src/play.ts` `onStartGame` (moves the game from pending to running, schedules the time-limit `endGame`) |
 | `launch game` | S→C | `Game`, to the game room | `Bomberman-2.0-Backend/src/play.ts` `onStartGame` | `Bomberman-2.0/src/routes/pending/Pending.tsx`, `Bomberman-2.0/src/routes/game/components/RestartGameModal.tsx`, `Bomberman-2.0/src/game/scenes/GameOver.ts` |
-| `get current game` | C→S | `game_id: string`; ack `(game: Game or null)` from the running games (`null` when the game is unknown: `undefined` becomes `null` on the wire) | `Bomberman-2.0/src/game/PhaserGame.tsx` | `Bomberman-2.0-Backend/src/app.ts` → `Bomberman-2.0-Backend/src/play.ts` `onGetCurrentGame` |
+| `get current game` | C→S | `game_id: string`; ack `(game: Game or null)` from the running games (`null` when the game is unknown: `undefined` becomes `null` on the wire) | `Bomberman-2.0/src/game/PhaserGame.tsx` | `Bomberman-2.0-Backend/src/server.ts` → `Bomberman-2.0-Backend/src/play.ts` `onGetCurrentGame` |
 | `update player position` | C→S | `{ playerId, gameId, x, y }` (pixels), every `PING` ms while moving | `Bomberman-2.0/src/game/entities/player.ts` `positionUpdaterLoop` | `Bomberman-2.0-Backend/src/play.ts` `updatePlayerPosition` |
 | `move player` | S→C | `{ player_id, x, y }`, to the sender's own room and the game room (the sender receives it too and ignores it) | `Bomberman-2.0-Backend/src/play.ts` `updatePlayerPosition` | `Bomberman-2.0/src/game/scenes/Playing.ts` `onMovePlayer` |
 | `create bomb` | C→S | `{ playerId, gameId, col, row }` | `Bomberman-2.0/src/game/entities/player.ts` `handleBombs` | `Bomberman-2.0-Backend/src/play.ts` `createBomb` |
@@ -65,12 +65,12 @@ Direction: `C→S` client to server, `S→C` server to client, `both` when the s
 | `player win` | S→C | `{ winner: Player, prevGameInfo }`, to the game room, when one player is left alive | `Bomberman-2.0-Backend/src/play.ts` `onPlayerDied` | `Bomberman-2.0/src/routes/game/components/PlayerWinModal.tsx` |
 | `end game` | S→C | `{ game_id, new_game_id, prevGameInfo }`, to the game room, after the delay of `endGame` | `Bomberman-2.0-Backend/src/play.ts` `endGame` | `Bomberman-2.0/src/game/scenes/Playing.ts` `onEndGame`, `Bomberman-2.0/src/routes/game/components/RestartGameModal.tsx`, `Bomberman-2.0/src/routes/game/components/PlayerWinModal.tsx` |
 | `leave game` | C→S | none | `Bomberman-2.0/src/game/scenes/Playing.ts` `onEndGame` | `Bomberman-2.0-Backend/src/play.ts` `onLeaveGame` |
-| `player disconnect` | both | C→S: `{ player_id }` (the sender's own socket id). S→C: `{ player_id }`, to the game room | C→S: `Bomberman-2.0/src/routes/game/components/PlayerInfo.tsx` `backToMenu`; S→C: `Bomberman-2.0-Backend/src/play.ts` `onDisconnectFromGame` | S: `Bomberman-2.0-Backend/src/app.ts` → `Bomberman-2.0-Backend/src/play.ts` `onDisconnectFromGame`; C: `Bomberman-2.0/src/game/scenes/Playing.ts` `onPlayerDisconnect` |
-| `joinRoom` | C→S | `{ room_id }` | none (no client emits it) | `Bomberman-2.0-Backend/src/app.ts` (inline `client.join`) |
-| `leaveRoom` | C→S | `{ room_id }` | none (no client emits it) | `Bomberman-2.0-Backend/src/app.ts` (inline `client.leave`) |
+| `player disconnect` | both | C→S: `{ player_id }` (the sender's own socket id). S→C: `{ player_id }`, to the game room | C→S: `Bomberman-2.0/src/routes/game/components/PlayerInfo.tsx` `backToMenu`; S→C: `Bomberman-2.0-Backend/src/play.ts` `onDisconnectFromGame` | S: `Bomberman-2.0-Backend/src/server.ts` → `Bomberman-2.0-Backend/src/play.ts` `onDisconnectFromGame`; C: `Bomberman-2.0/src/game/scenes/Playing.ts` `onPlayerDisconnect` |
+| `joinRoom` | C→S | `{ room_id }` | none (no client emits it) | `Bomberman-2.0-Backend/src/server.ts` (inline `client.join`) |
+| `leaveRoom` | C→S | `{ room_id }` | none (no client emits it) | `Bomberman-2.0-Backend/src/server.ts` (inline `client.leave`) |
 <!-- socket-contract:end -->
 
-socket.io built-in events are not in the table and the check script ignores them: the server uses `connection` and `disconnect` (`Bomberman-2.0-Backend/src/app.ts` releases the `Play` bomb-queue timer and removes the player from a pending or running game); the client uses `connect` and `disconnect` in `Bomberman-2.0/src/components/Socket.tsx`.
+socket.io built-in events are not in the table and the check script ignores them: the server uses `connection` and `disconnect` (`Bomberman-2.0-Backend/src/server.ts` releases the `Play` bomb-queue timer and removes the player from a pending or running game); the client uses `connect` and `disconnect` in `Bomberman-2.0/src/components/Socket.tsx`.
 
 ### Check limits
 
