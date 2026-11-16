@@ -1,6 +1,6 @@
 # Docs
 
-Architecture and game docs for the Bomberman workspace. They describe the `dev` branch of both submodules: `Bomberman-2.0` (React + Phaser 3 client) and `Bomberman-2.0-Backend` (Express + socket.io + MongoDB server). Docs explain contracts, invariants and ownership; read the code for details.
+Architecture and game docs for the Bomberman workspace. They describe the `dev` branch of both submodules: `Bomberman-2.0` (React + Phaser 4 client) and `Bomberman-2.0-Backend` (Express + socket.io + MongoDB server). Docs explain contracts, invariants and ownership; read the code for details.
 
 ## Reading order
 

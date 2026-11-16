@@ -22,7 +22,7 @@ Terms used in the code and in these docs. One term, one meaning. Where the code 
 | **Portal** | A teleport cell. Appears when a blast hits one of the map's fixed portal cells (`*_PORTAL_SPAWNS`) and portals are enabled. |
 | **Portal cell** / **portal spawn** | One of the fixed `(row, col)` cells in `SMALL_MAP_PORTAL_SPAWNS` / `DEFAULT_MAP_PORTAL_SPAWNS`. |
 | **Power** | Blast range in cells from the bomb, per player on the server: 1, +1 per `POWER` spoil. |
-| **`prevGameInfo`** | The finished `Game` with a `noKillPhrase` on each player without kills, sent with `player win` and `end game` and kept in sessionStorage across the reload. |
+| **`prevGameInfo`** | The finished `Game` with a `noKillPhrase` on each player without kills, sent with `player win` and `end game` and shown in the results modal (`EndGameModal`). |
 | **Running game** | A `Game` in `runningGames` (between `start game` and `end game`). |
 | **Shadow map** (`shadow_map`) | The server's grid of the map: wall 1, box 5, empty 6. The blast reads and changes it. |
 | **Skin** (`Player.skin`) | The URL of a player's avatar image. Loaded as a Phaser texture with the player id as key. |

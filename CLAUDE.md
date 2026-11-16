@@ -8,7 +8,7 @@ Multiplayer Bomberman. This root repo holds docs and agent configuration only. T
 
 | Path | Repo | Stack | Role |
 | --- | --- | --- | --- |
-| `Bomberman-2.0/` | `NickDurnev/Bomberman-2.0` | React, Phaser 3, Vite | Client: mirrors state and renders |
+| `Bomberman-2.0/` | `NickDurnev/Bomberman-2.0` | React, Phaser 4, Vite | Client: mirrors state and renders |
 | `Bomberman-2.0-Backend/` | `NickDurnev/Bomberman-2.0-Backend` | Express, socket.io, MongoDB | Server: authoritative for game state |
 | `Bomberman-2.0-E2E/` | `NickDurnev/Bomberman-2.0-E2E` | Playwright | E2E suite: two players play real matches against the local stack |
 

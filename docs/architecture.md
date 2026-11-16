@@ -6,7 +6,7 @@ How the multiplayer Bomberman game is built and how a match flows through it. Wr
 
 | Process | Repo | Stack | Local port |
 | --- | --- | --- | --- |
-| Web client | `Bomberman-2.0` | React (react-router routes), Phaser 3 (the match itself), socket.io-client, zustand, Vite | 3000 (`make frontend`) |
+| Web client | `Bomberman-2.0` | React (react-router routes), Phaser 4 (the match itself), socket.io-client, zustand, Vite | 3000 (`make frontend`) |
 | Game server | `Bomberman-2.0-Backend` | Express + socket.io on one HTTP server, mongoose | 4000 (`make backend`) |
 | Database | — | MongoDB (`docker-compose.yml` locally) | 27017 (`make db`) |
 
@@ -35,7 +35,7 @@ Why this split: it keeps movement responsive (no server round-trip per frame) wh
 | Player identity on the socket | `client.customId`, `userName`, `userPicture`, `socket_game_id` (`CustomSocket` in `Bomberman-2.0-Backend/src/types.ts`) | Socket connection |
 | Users, stats | MongoDB: `User` (`socketID` field links to the player id), `PlayStats` (`userId` = player id) | Persistent (stats wiped monthly) |
 | Player id and Google profile | Browser localStorage: `socket_id`, `google_user` | Persistent per browser |
-| Result of the last match across the reload | Browser sessionStorage: `prevGameInfo`, `new_game_id` | One reload |
+| Result of the last match | React state in `EndGameModal` (`Bomberman-2.0/src/routes/game/components/EndGameModal.tsx`) | Until the route `gameId` changes |
 | Game name typed in the menu | zustand `useGameStore` (`Bomberman-2.0/src/hooks/stores.ts`) | Page session |
 | Live match view | Phaser `Playing` scene: sprites in groups, `currentGame` | One match |
 
@@ -52,10 +52,10 @@ The server does not know about the camera or touch input. Movement is reported w
 ## Lifecycle of a match
 
 ```
-Menu (/)  ──host──▶  /map  ──create game──▶  /pending/:id  ──start──▶  /game/:id  ──end game──▶ reload of /game/:id
-   ▲  enter lobby          ack {game_id}          enter pending game      get current game          RestartGameModal
-   │                                              update game             Preload → Playing         enter pending game (new id)
-   └──────────── join a listed game ─────────────▶                                                   start timer / start game
+Menu (/)  ──host──▶  /map  ──create game──▶  /pending/:id  ──start──▶  /game/:id  ──end game──▶ EndGameModal (same page)  ──launch──▶ /game/:new id
+   ▲  enter lobby          ack {game_id}          enter pending game      get current game          enter pending game (new id)          (no reload)
+   │                                              update game             Preload → Playing         start timer / start game
+   └──────────── join a listed game ─────────────▶
 ```
 
 1. **Lobby.** `Menu.tsx` listens for `display pending games` and emits `enter lobby`; the server joins the socket to `lobby_room` and answers through the ack. Lobby changes (game created, game full or not full again, game deleted) are broadcast to `lobby_room`.
@@ -66,9 +66,9 @@ Menu (/)  ──host──▶  /map  ──create game──▶  /pending/:id  �
 6. **Game over.** The server ends a match in three ways, all through `Play.endGame`:
    - one player left alive after a death: `player win`, then `end game` after 5 s, stats processed with the winner;
    - nobody left alive: `end game` after 2 s, stats processed;
-   - time limit, or only one player left after a disconnect: `end game`, stats **not** processed.
+   - time limit, or a leave or disconnect that leaves at most one living player (dead players do not count): `end game`, stats **not** processed. Reason `disconnect` when one living player is left (winner by forfeit), `draw` when none is left.
 
    A match ends once. The first ending wins, and `endGame` skips every later one (`endingGames`), for example the winner dying or a player leaving during the 5 s win delay, or the time limit after an early end. The time-limit end runs `GAME_DURATION` after the start; by then an ended match is no longer in `runningGames`, so it does nothing.
 
    Before it emits `end game`, the server creates a fresh pending game with the same settings and sends its id as `new_game_id`.
-7. **Restart.** On `end game`, `Playing` emits `leave game` and tears itself down; `RestartGameModal` stores `prevGameInfo` and `new_game_id` in sessionStorage and reloads the page. After the reload the modal shows the last results, emits `enter pending game` for the new id and runs the same timer/start flow as step 4 inside the modal.
+7. **Results and restart (no reload).** The first of `player win` and `end game` starts the end sequence in `Playing` once per match: a ~1 s board transition (`playEndTransition` in `src/game/endSequence.ts`: a camera Wipe filter on WebGL, a camera fade-out on Canvas), then the EventBus event `show-results`, and `EndGameModal` opens. If `end game` arrives and no `show-results` follows within 1.5 s (no running scene), the modal opens anyway. The modal shows "Winner <name>" (win; disconnect, "by forfeit"), "Draw" (draw; disconnect with no living player) or "Time's up" from `reason` and `prevGameInfo`, then the stats table. On `end game`, `Playing` emits `leave game` and tears itself down, and the modal emits `enter pending game` for `new_game_id` at once and shows the players slots with "Restart Game" and "Main Menu". "Restart Game" runs the same timer/start flow as step 4 inside the modal; `launch game` (or the end of the countdown) navigates to `/game/<new id>`. The `Game` route does not remount: `PhaserGame` destroys the old `Phaser.Game` and creates a new one for the new id, and the modal and the HUD hooks reset their state on the `gameId` change.

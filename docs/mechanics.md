@@ -26,7 +26,7 @@ Arrow keys move; diagonal movement is allowed (both axes can be set in the same 
 1. **Place.** Space emits `create bomb` with the player's current cell. The client allows it only when `activeBombs < bombs`, no bomb sprite is already on that cell, and the press cooldown has passed. Cooldown = `100 + ((MAX_SPEED − speed) / STEP_SPEED) × 10` ms: 200 ms at start speed, 100 ms at max speed. The server checks none of this.
 2. **Create.** The server copies the owner's current `power` and `delay` into the `Bomb`, stores it in `Game.bombs`, queues it with `detonationTime = now + delay`, and broadcasts `show bomb`.
 3. **Fuse.** The queue lives on the **bomb owner's** `Play` instance and is checked every 100 ms, so a bomb detonates up to 100 ms after its `delay`. Fuse `delay` starts at `INITIAL_DELAY` 2000 ms; each `DELAY` spoil subtracts `STEP_DELAY` 200 ms while the value is above `MIN_DELAY` 200 ms (minimum reached after 9 pick-ups). A bomb keeps the delay it had when placed.
-4. **Visual fuse.** The client bomb sprite always scales to 1.2× over `EXPLOSION_TIME` 2000 ms and loops a 14-frame animation at 6 fps. This does not follow the server delay: with `DELAY` spoils the bomb detonates before the tween ends. The sprite is removed only on `detonate bomb`.
+4. **Visual fuse.** The client bomb sprite scales to 1.2× over the server fuse `delay` (ms) from `show bomb`. If the payload has no `delay`, it uses `EXPLOSION_TIME` (2000 ms). The 14-frame animation loops at 6 fps. If the `fuseWarning` player setting is on, the bomb flashes (white/red FILL tint pulse) in the last 500 ms of the fuse. On the Canvas renderer, the bomb blinks its alpha (0.4 and 1) instead. If `delay` is 500 ms or less, the flash starts at once. The sprite is removed only on `detonate bomb`.
 5. **Detonate.** The server computes the blast (below), deletes the bomb from `Game.bombs` and broadcasts `detonate bomb`. The owner's client decrements `activeBombs`.
 
 A bomb is a solid, immovable body for the local player on the client. The server keeps no bomb cells in `shadow_map`.
@@ -54,6 +54,7 @@ A blast that touches another bomb detonates it. The client detects the overlap o
 - Overlaps run only while the local player is `active`. A dead player and a player in the 500 ms portal transit (below) cannot be hit.
 - Your own blast kills you. The server records the death but gives no kill for it (`Player.kill` ignores its own id).
 - The server marks the player dead, credits the kill to `killerId`, stores a tombstone at the reported cell and broadcasts `show tombstone`. Clients draw a `Tombstone` sprite and remove that enemy sprite. Dead players stay in `Game.players`.
+- On the client of the dead player only, the view dips to black for ~300 ms (camera fade) and then stays grey (camera ColorMatrix grayscale, WebGL only) until the match scene stops. The board stays visible. This is `deathEffect` in `Bomberman-2.0/src/game/effects.ts`; it is always on.
 
 ## Spoils (power-ups)
 
@@ -83,10 +84,10 @@ Only when the game has `isPortalsEnabled`.
 
 ## Starting, ending and winning
 
-- **Players:** a game starts with at least 2 players (`players.length > 1` in `Pending.tsx` and `RestartGameModal.tsx`). The maximum is the map's `max_players`: 14 on `default_map`, 8 on `small_map`.
+- **Players:** a game starts with at least 2 players (`players.length > 1` in `Pending.tsx` and `EndGameModal.tsx`). The maximum is the map's `max_players`: 14 on `default_map`, 8 on `small_map`.
 - **Start countdown:** 3 s, run on each client after `start timer`.
 - **Time limit:** `GAME_DURATION` 180 s. The client shows its own countdown (`CountdownTimer.tsx`), which is not synced to the server.
-- **End conditions** and their delays (5 s after a win, 2 s when nobody is left, 0 s when a disconnect leaves one player, 180 s time limit) are in [architecture.md › Lifecycle](architecture.md#lifecycle-of-a-match). Stats are processed only for the two death-based endings.
+- **End conditions** and their delays (5 s after a win, 2 s when nobody is left, 0 s when a leave or disconnect leaves at most one living player, 180 s time limit) are in [architecture.md › Lifecycle](architecture.md#lifecycle-of-a-match). Stats are processed only for the two death-based endings.
 
 ### Points
 

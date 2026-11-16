@@ -26,16 +26,17 @@ The HUD icon path is built from the HUD title: `/assets/${title.toLowerCase()}_i
 | `tiles` | `maps/tileset.png` | 210 × 35 → 6 tiles | tilemap layer |
 | `default_map`, `small_map` | `maps/<name>.json` (tilemap JSON) | — | `Playing.createMap` |
 | `bomb_tileset` | `images/game/bombs.png` | 35 × 490 → 14 | `Bomb` (anim `bomb`, frames 0–13, 6 fps, loop) |
-| `explosion_center`, `explosion_horizontal`, `explosion_vertical`, `explosion_up`, `explosion_right`, `explosion_down`, `explosion_left` | `images/game/<key>.png` | 175 × 35 → 5 each | `FireBlast` (key = `BlastedCell.type`; anim frames 0–4, 20 fps, once) |
+| `explosion_center`, `explosion_horizontal`, `explosion_vertical`, `explosion_up`, `explosion_right`, `explosion_down`, `explosion_left` | `images/game/<key>.png` | 175 × 35 → 5 each | `FireBlast` (key = `BlastedCell.type`; anim `blast_<key>`, frames 0–4, 20 fps, once) |
 | `spoil_tileset` | `images/game/spoil_tileset.png` | 35 × 140 → 4 | `Spoil` (frame 0 `BOMBS`, 1 `POWER`, 2 `SPEED`, 3 any other type, so `DELAY`) |
 | `portal_tileset` | `images/game/portal.png` | 140 × 140 → 16 | `Portal` (anim frames 0–14, 20 fps, loop) |
 | `tombstone` | `images/game/tombstone.png` | 35 × 35 → 1 | `Tombstone` |
+| `particle` | none: generated in `Preload.create` (4 × 4 white square) | — | `debrisBurst`, `pickupBurst` in `src/game/effects.ts` (pooled emitter per scene, tinted per kind) |
 | `avatar-1` … `avatar-16` | `images/avatars/avatar-<n>.png` | single image | avatar fallback |
 | `<player id>` | the player's `skin` URL (remote) | single image | the player's avatar |
 
 The `FireBlast` texture key comes from the server: `Bomb.detonate()` builds `type` as `explosion_<direction>`. A new blast piece needs a server change and a new `Preload` key with the same name.
 
-Animations are created per sprite instance with fixed keys (`bomb`, `blast`, `portal`) through `this.anims.create`.
+Animations are global. `Preload.createAnimations` creates them once per `Phaser.Game`: `bomb`, `portal`, and one `blast_<type>` per explosion sheet (`BLAST_TYPES`). The entities only call `play(key)`.
 
 ## Avatar and skin pipeline
 
@@ -55,8 +56,8 @@ Preload: load.image(player.id, player.skin) ──▶ setPlayerAvatar: textures.
 4. **Load.** `Preload` loads each player's skin under the player id when `skin` is not empty. A failed load only logs `Failed to load asset`.
 5. **Render.** `setPlayerAvatar` in `Bomberman-2.0/src/utils/utils.ts`:
    - uses the player id texture when `textures.exists(id)` is true, else a random `avatar-1` … `avatar-12` (13–16 are loaded but never picked);
-   - sizes the body from the texture, turns it into a circle and sets the display size to 32 × 32 px (`TILE_SIZE − 3`);
-   - applies a circular geometry mask (`maskShape`) that must move with the sprite.
+   - draws that texture once into a round canvas texture `<key>_round` (`makeRoundTexture`: a centred square crop inside a circle clip) and uses it as the sprite texture. Phaser 4 does not support `setMask` in WebGL, so there is no mask;
+   - sizes the body from the round texture, turns it into a circle and sets the display size to 32 × 32 px (`TILE_SIZE − 3`).
 
 Rules:
 

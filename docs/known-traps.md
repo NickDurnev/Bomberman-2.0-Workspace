@@ -12,7 +12,7 @@ Sources: the 2026-06 audit (`Bomberman-2.0-BUG-REPORT.md`, outside this repo, it
 
 **Rule.** Follow the [Listener rule](socket-contract.md#listener-rule): create each handler once, pass the same reference to `on` and `off`, never `.bind` or an arrow inline in `on`/`off`, hang Phaser cleanup on the scene `SHUTDOWN` and `DESTROY` events. When a timing bug "grows over time", count listeners (`clientSocket.listeners(event).length`) before you touch game logic.
 
-**Status.** Fixed in `Bomberman-2.0/src/game/scenes/Playing.ts` (the `socketHandlers` table), `Bomberman-2.0/src/game/scenes/GameOver.ts`, `Bomberman-2.0/src/routes/game/components/RestartGameModal.tsx` and `Bomberman-2.0/src/game/PhaserGame.tsx`.
+**Status.** Fixed in `Bomberman-2.0/src/game/scenes/Playing.ts` (the `socketHandlers` table), `Bomberman-2.0/src/game/scenes/GameOver.ts`, `Bomberman-2.0/src/routes/game/components/EndGameModal.tsx` and `Bomberman-2.0/src/game/PhaserGame.tsx`.
 
 ## Per-connection timers on the server
 
