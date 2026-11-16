@@ -30,8 +30,9 @@ Why this split: it keeps movement responsive (no server round-trip per frame) wh
 | State | Location | Lifetime |
 | --- | --- | --- |
 | Pending games (lobby) | `pendingGames: Map<id, Game>` in `Bomberman-2.0-Backend/src/lobby.ts` | Until started, emptied, or empty for `LOBBY_TIMEOUT` (cleanup every minute) |
-| Running games | `runningGames: Map<id, Game>` in `Bomberman-2.0-Backend/src/play.ts` | From `start game` to `end game` |
-| Per-connection gameplay handler | `Play` instance on `client.playInstance`, with its own bomb queue (100 ms interval) | Socket connection; `destroy()` on `disconnect` |
+| Running games | `runningGames: Map<id, Game>` in `Bomberman-2.0-Backend/src/play.ts` | From `start game` to `end game`; a cleanup every minute removes a game that is empty `GAME_DURATION` after its start, or older than `DELETE_PENDING_GAMES_INTERVAL` from its start |
+| Bomb fuses | `bombQueue: Map<game id, items>` in `Bomberman-2.0-Backend/src/play.ts`, one 100 ms interval for the process | Until the bomb explodes or its game leaves `runningGames` |
+| Per-connection gameplay handler | `Play` instance on `client.playInstance` (no timers) | Socket connection |
 | Player identity on the socket | `client.customId`, `userName`, `userPicture`, `socket_game_id` (`CustomSocket` in `Bomberman-2.0-Backend/src/types.ts`) | Socket connection |
 | Users, stats | MongoDB: `User` (`socketID` field links to the player id), `PlayStats` (`userId` = player id) | Persistent (stats wiped monthly) |
 | Player id and Google profile | Browser localStorage: `socket_id`, `google_user` | Persistent per browser |

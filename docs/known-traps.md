@@ -22,7 +22,7 @@ Sources: the 2026-06 audit (`Bomberman-2.0-BUG-REPORT.md`, outside this repo, it
 
 **Rule.** Anything a connection starts (timers, intervals, subscriptions) must be released in the `disconnect` handler in `Bomberman-2.0-Backend/src/server.ts`, also for sockets that never joined a game. Do not keep shared match state on a per-connection object: it dies with that connection.
 
-**Status.** Fixed: `Play.destroy()` clears the interval and runs on every disconnect.
+**Status.** Fixed: the bomb queue is per game, on one module-level interval in `Bomberman-2.0-Backend/src/play.ts`. A connection starts no timer.
 
 ## Identity handshake race
 

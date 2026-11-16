@@ -25,7 +25,7 @@ Arrow keys move; diagonal movement is allowed (both axes can be set in the same 
 
 1. **Place.** Space emits `create bomb` with the player's current cell. The client allows it only when `activeBombs < bombs`, no bomb sprite is already on that cell, and the press cooldown has passed. Cooldown = `100 + ((MAX_SPEED − speed) / STEP_SPEED) × 10` ms: 200 ms at start speed, 100 ms at max speed. The server checks none of this.
 2. **Create.** The server copies the owner's current `power` and `delay` into the `Bomb`, stores it in `Game.bombs`, queues it with `detonationTime = now + delay`, and broadcasts `show bomb`.
-3. **Fuse.** The queue lives on the **bomb owner's** `Play` instance and is checked every 100 ms, so a bomb detonates up to 100 ms after its `delay`. Fuse `delay` starts at `INITIAL_DELAY` 2000 ms; each `DELAY` spoil subtracts `STEP_DELAY` 200 ms while the value is above `MIN_DELAY` 200 ms (minimum reached after 9 pick-ups). A bomb keeps the delay it had when placed.
+3. **Fuse.** The queue is per game, not per connection, so a bomb still explodes after its owner leaves or disconnects. It is checked every 100 ms, so a bomb detonates up to 100 ms after its `delay`. Fuse `delay` starts at `INITIAL_DELAY` 2000 ms; each `DELAY` spoil subtracts `STEP_DELAY` 200 ms while the value is above `MIN_DELAY` 200 ms (minimum reached after 9 pick-ups). A bomb keeps the delay it had when placed.
 4. **Visual fuse.** The client bomb sprite scales to 1.2× over the server fuse `delay` (ms) from `show bomb`. If the payload has no `delay`, it uses `EXPLOSION_TIME` (2000 ms). The 14-frame animation loops at 6 fps. If the `fuseWarning` player setting is on, the bomb flashes (white/red FILL tint pulse) in the last 500 ms of the fuse. On the Canvas renderer, the bomb blinks its alpha (0.4 and 1) instead. If `delay` is 500 ms or less, the flash starts at once. The sprite is removed only on `detonate bomb`.
 5. **Detonate.** The server computes the blast (below), deletes the bomb from `Game.bombs` and broadcasts `detonate bomb`. The owner's client decrements `activeBombs`.
 
@@ -58,9 +58,9 @@ A blast that touches another bomb detonates it. The client detects the overlap o
 
 ## Spoils (power-ups)
 
-Drop: for every blasted cell that is not a portal cell, the server rolls `SPOIL_CHANCE` 50 % and creates a `Spoil` with a uniform random type. The type is one of `SPEED`, `POWER`, `BOMBS`, plus `DELAY` when the game has `isDelaySpoilEnabled`.
+Drop: for every destroyed box that is not a portal cell, the server rolls `SPOIL_CHANCE` 50 % and creates a `Spoil` with a uniform random type. The type is one of `SPEED`, `POWER`, `BOMBS`, plus `DELAY` when the game has `isDelaySpoilEnabled`.
 
-Display: the client draws a spoil only when the cell has `destroyed: true` (a box was broken). A blast through a cell that already shows a spoil removes that sprite on every client.
+Display: the client draws a spoil only when the cell has `destroyed: true` (a box was broken). A blast through a cell that already shows a spoil removes that sprite on every client, and the server deletes that spoil from `Game.spoils`.
 
 Pick-up: the local player overlaps a spoil sprite → emits `pick up spoil` and destroys the sprite at once → the server deletes the spoil, applies it to its `Player` and broadcasts `spoil was picked` → each client removes the sprite, and the picker's client applies it to its local `Player`.
 
@@ -78,7 +78,7 @@ Pick-up: the local player overlaps a spoil sprite → emits `pick up spoil` and 
 Only when the game has `isPortalsEnabled`.
 
 - Portal cells are fixed per map: `SMALL_MAP_PORTAL_SPAWNS` / `DEFAULT_MAP_PORTAL_SPAWNS` in `Bomberman-2.0-Backend/src/constants.ts` (four cells each, all covered by boxes in the current maps). `Bomb` uses the small list when `mapName === "small_map"` and the default list otherwise.
-- A blast on a portal cell creates a `Portal` there instead of a spoil.
+- A blast on a portal cell creates a `Portal` there instead of a spoil. A cell gets one portal: a later blast on it adds no second one.
 - Entering a portal: the client emits `use portal`, hides the player and disables its body and movement for `PORTAL_DELAY_STEP` 500 ms. The server needs at least two portals; it picks a random other portal and broadcasts `teleport player` with that cell's centre.
 - Cooldown: after the player enters a portal, the client ignores portal overlaps for `PORTAL_DELAY` 3000 ms.
 
@@ -97,7 +97,7 @@ Only when the game has `isPortalsEnabled`.
 | Win (last alive) | `POINTS_PER_WIN` | 3 |
 | Top 3 | `POINTS_PER_TOP3` | 1 |
 
-Top 3: when a death leaves exactly 3 players alive, the server calls `top3()` and the players get the top-3 point.
+Top 3: when a death leaves exactly 3 players alive, the server marks those 3 living players (`Game.markTop3`), and they get the top-3 point. In a game that starts with 3 players, nobody gets it.
 
 ## Game modes
 

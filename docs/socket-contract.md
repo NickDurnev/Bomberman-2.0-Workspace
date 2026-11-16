@@ -70,7 +70,7 @@ Direction: `C→S` client to server, `S→C` server to client, `both` when the s
 | `leaveRoom` | C→S | `{ room_id }` | none (no client emits it) | `Bomberman-2.0-Backend/src/server.ts` (inline `client.leave`) |
 <!-- socket-contract:end -->
 
-socket.io built-in events are not in the table and the check script ignores them: the server uses `connection` and `disconnect` (`Bomberman-2.0-Backend/src/server.ts` releases the `Play` bomb-queue timer and removes the player from a pending or running game); the client uses `connect` and `disconnect` in `Bomberman-2.0/src/components/Socket.tsx`.
+socket.io built-in events are not in the table and the check script ignores them: the server uses `connection` and `disconnect` (`Bomberman-2.0-Backend/src/server.ts` removes the player from a pending or running game); the client uses `connect` and `disconnect` in `Bomberman-2.0/src/components/Socket.tsx`.
 
 ### Check limits
 
