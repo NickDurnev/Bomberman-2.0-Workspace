@@ -56,7 +56,7 @@ Preload: load.image(player.id, player.skin) ──▶ setPlayerAvatar: textures.
 4. **Load.** `Preload` loads each player's skin under the player id when `skin` is not empty. A failed load only logs `Failed to load asset`.
 5. **Render.** `setPlayerAvatar` in `Bomberman-2.0/src/utils/utils.ts`:
    - uses the player id texture when `textures.exists(id)` is true, else a random `avatar-1` … `avatar-12` (13–16 are loaded but never picked);
-   - draws that texture once into a round canvas texture `<key>_round` (`makeRoundTexture`: a centred square crop inside a circle clip) and uses it as the sprite texture. Phaser 4 does not support `setMask` in WebGL, so there is no mask;
+   - draws that texture once into a round canvas texture `<key>_round` (`makeRoundTexture`: a centred square crop inside a circle clip, at most 128 × 128 px) and uses it as the sprite texture. Phaser 4 does not support `setMask` in WebGL, so there is no mask;
    - sizes the body from the round texture, turns it into a circle and sets the display size to 32 × 32 px (`TILE_SIZE − 3`).
 
 Rules:
