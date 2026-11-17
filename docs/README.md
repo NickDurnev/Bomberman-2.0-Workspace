@@ -16,6 +16,7 @@ Read 1–3 before any change. Then read the docs for the area you touch.
 8. [assets.md](assets.md): asset folders, `Preload` keys, sprite sizes, the avatar pipeline.
 9. [testing.md](testing.md): the backend test suite, how to run it, the helpers, where a new test goes.
 10. [e2e-hook.md](e2e-hook.md): the read-only `window.__e2e` hook that the E2E suite uses, and when it must change.
+11. [releases.md](releases.md): the `dev` → `main` release, the deploys, release-please and the back-merge to `dev`.
 
 ## By task
 
@@ -28,6 +29,7 @@ Read 1–3 before any change. Then read the docs for the area you touch.
 | Add or replace sprites, avatars | assets › Changing assets |
 | Write or change a backend test | testing, mechanics, socket-contract |
 | Debug a bug | known-traps first, then the docs of the area |
+| Release to production | releases |
 | Add a game mode or bots | architecture, mechanics, socket-contract › Authority rule |
 
 ## Keeping docs true

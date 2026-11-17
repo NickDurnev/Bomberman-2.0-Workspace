@@ -129,6 +129,7 @@ Run `sync-docs`: update `docs/` for anything the change made untrue (events, ent
 - **No AI attribution.** No "Generated with Claude Code" footer and no mention of Claude, Anthropic or an AI assistant. Write the title and body as the developer.
 - Use the GitHub MCP (`mcp__plugin_github_github__*`) for PRs; fall back to `gh` if it is not available. Git stays on the CLI.
 - **Do not merge.** The maintainer reviews, merges, and verifies in DEV. After a PR merges to `dev`, Dependabot (`.github/dependabot.yml`) opens a daily PR in the root that bumps the submodule pointer. The maintainer merges it. For a bump before then, run `git submodule update --remote` in the root and commit `chore: bump submodules`.
+- **Releases.** A `dev` → `main` PR (backend first) deploys, and `release.yml` then cuts the version, the tag and the CHANGELOG, and back-merges the release commit to `dev`. Do not edit `CHANGELOG.md`, `.release-please-manifest.json` or the `version` fields by hand. See `docs/releases.md`.
 - **Dependabot PRs.** Each child repo gets weekly grouped version PRs (frontend and backend to `dev`, E2E to `main`). Review them like any PR: `checks` green, and the `E2E` workflow for a runtime, build or test-tool change. A Dependabot security PR on `main` is closed; fix the package through `dev`.
 
 ## Never
