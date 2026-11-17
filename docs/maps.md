@@ -39,7 +39,7 @@ Custom properties on the `Blocks` layer:
 
 | Property | Read by | Use |
 | --- | --- | --- |
-| `max_players` | server `Game` (lobby full check); client `SelectMap.tsx` (the "Players" text on the map card) | 14 on `default_map`, 8 on `small_map`, 18 on `big_map` |
+| `max_players` | server `Game` (lobby full check); client `SelectMap.tsx` (the "Players" text on the map card) | 14 on `default_map`, 8 on `small_map`, 20 on `big_map` |
 | `spawns` | server `Game` | list of `{ col, row }`, one per player slot |
 | `wall`, `box` | server `Game.createMapData` | tile ids for wall (1) and box (5); every other id becomes empty |
 | `empty` | nothing | 6 |

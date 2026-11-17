@@ -84,7 +84,7 @@ Only when the game has `isPortalsEnabled`.
 
 ## Starting, ending and winning
 
-- **Players:** a game starts with at least 2 players (`players.length > 1` in `Pending.tsx` and `EndGameModal.tsx`). The maximum is the map's `max_players`: 14 on `default_map`, 8 on `small_map`, 18 on `big_map`.
+- **Players:** a game starts with at least 2 players (`players.length > 1` in `Pending.tsx` and `EndGameModal.tsx`). The maximum is the map's `max_players`: 14 on `default_map`, 8 on `small_map`, 20 on `big_map`.
 - **Start countdown:** 3 s, run on each client after `start timer`.
 - **Time limit:** `GAME_DURATION` 180 s. The client shows its own countdown (`CountdownTimer.tsx`), which is not synced to the server.
 - **End conditions** and their delays (5 s after a win, 2 s when nobody is left, 0 s when a leave or disconnect leaves at most one living player, 180 s time limit) are in [architecture.md › Lifecycle](architecture.md#lifecycle-of-a-match). Stats are processed only for the two death-based endings.
