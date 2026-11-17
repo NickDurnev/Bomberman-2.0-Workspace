@@ -33,7 +33,7 @@ dev: db ## Start MongoDB, backend and frontend
 ci: ## Run every CI step in all repos (required before opening a PR)
 	cd Bomberman-2.0-Backend && npm run check && npm run typecheck && npm test && npm run build
 	cd Bomberman-2.0 && npm run check && npm run typecheck && VITE_CLIENT_ID=ci-placeholder VITE_SERVER_BASE_URL=http://localhost:4000 npm run build
-	cd Bomberman-2.0-E2E && npm run check && npm run typecheck
+	cd Bomberman-2.0-E2E && npm run check && npm run typecheck && npm run load:test
 	@echo "ci: all steps passed in all repos"
 
 # The E2E suite against a fresh local stack built from the current checkouts.

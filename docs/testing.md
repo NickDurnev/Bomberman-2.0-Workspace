@@ -90,3 +90,28 @@ describe("example", () => {
 - Logic in one class, no socket: `test/unit/<class>.test.ts`.
 - An event, a route or a flow between players: `test/integration/<area>.test.ts`. Use one file for each area. Each file starts its own server.
 - A change to backend game logic, a socket event or an HTTP route adds or updates a test in the same PR.
+
+## Load test
+
+`Bomberman-2.0-E2E/load/` holds a separate tool. It measures how many players one room holds before the game lags. Bots play real matches against a backend, one match per step (default 2, 4, … 14 players). Each step gets a verdict: green, amber or red. Details and options: `Bomberman-2.0-E2E/load/README.md`.
+
+- Run it by hand from your computer: `cd Bomberman-2.0-E2E && npm run load`. The default target is the production backend, and the tool asks you to confirm. For a dry run, use `--url http://localhost:4000` with `make backend`.
+- Run it against production only with the maintainer.
+- CI runs only its unit tests (`npm run load:test`, also in `make ci`), never the load test.
+
+What it measures:
+
+- the time from a bot's `update player position` to its own `move player` echo, minus the network baseline (p95 of idle ack round trips before each step);
+- `create bomb` → `show bomb`, fuse lateness, lost moves and disconnects;
+- with `LOAD_SSH` set (`<user>@<droplet-ip>`, in the shell or in the gitignored `Bomberman-2.0-E2E/.env`), the droplet's pm2 metrics (CPU, memory, event-loop p95, restarts) and free memory, polled over SSH every 5 s. `LOAD_SSH` applies only to the production URL. Never commit the droplet address.
+
+Production safety:
+
+- Bots send no `email` in the handshake, so the server writes no `User` document.
+- Bots never send `player died`, so a match never ends with a win and writes no stats.
+- After each match, one bot deletes the pending room that the match end creates.
+- The teardown runs after an error and after Ctrl+C.
+- The tool keeps only metric fields from `pm2 jlist`, because that output holds each process's environment.
+- The droplet also runs other services. A step is red, and the run stops, when free memory falls below 50 MB or another service slows down.
+
+During a production run, an agent can watch the droplet with the Keymetrics MCP (`get-servers-status`), read only. Never use its `restart-process` or `reload-process` tools.
