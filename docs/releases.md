@@ -15,7 +15,8 @@ How a change gets from `dev` to production in `Bomberman-2.0` and `Bomberman-2.0
 
 ## Versions
 
-- Baseline `1.0.0` (tag `v1.0.0`) in both repos.
+- Baseline `1.0.0` (tag `v1.0.0`) in both repos. The first release, `v1.1.0`, has the whole earlier history in its CHANGELOG.
+- Tags are `vX.Y.Z` (`include-component-in-tag: false`). release-please finds the last release by this tag: never delete or rename a release tag.
 - `feat` → minor, `fix` and `perf` → patch, `!` or `BREAKING CHANGE` → major. Only `docs`, `style`, `chore`, `test`, `build` and `ci` commits since the last release give no release PR. The changelog sections are in `release-please-config.json`.
 - A major bump is not merged automatically. The release PR gets the label `needs-resolution` and a comment; the maintainer merges it.
 
