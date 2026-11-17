@@ -9,8 +9,8 @@ The grid lives in scripts/maps/<name>.txt:
 The script checks the grid, writes the server and client Tiled JSON copies
 and, with --png, renders the menu preview. See docs/maps.md.
 
-  python3 scripts/build-map.py big_map --players 20 --png
-  python3 scripts/build-map.py big_map --players 20 --check
+  python3 scripts/build-map.py big_map --players 18 --png
+  python3 scripts/build-map.py big_map --players 18 --check
 """
 
 import argparse
