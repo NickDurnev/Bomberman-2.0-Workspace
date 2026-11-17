@@ -24,7 +24,7 @@ The HUD icon path is built from the HUD title: `/assets/${title.toLowerCase()}_i
 | Key | File (under `Bomberman-2.0/public/assets/`) | Sheet size → frames | Used by |
 | --- | --- | --- | --- |
 | `tiles` | `maps/tileset.png` | 210 × 35 → 6 tiles | tilemap layer |
-| `default_map`, `small_map` | `maps/<name>.json` (tilemap JSON) | — | `Playing.createMap` |
+| `default_map`, `small_map`, `big_map` | `maps/<name>.json` (tilemap JSON) | — | `Playing.createMap` |
 | `bomb_tileset` | `images/game/bombs.png` | 35 × 490 → 14 | `Bomb` (anim `bomb`, frames 0–13, 6 fps, loop) |
 | `explosion_center`, `explosion_horizontal`, `explosion_vertical`, `explosion_up`, `explosion_right`, `explosion_down`, `explosion_left` | `images/game/<key>.png` | 175 × 35 → 5 each | `FireBlast` (key = `BlastedCell.type`; anim `blast_<key>`, frames 0–4, 20 fps, once) |
 | `spoil_tileset` | `images/game/spoil_tileset.png` | 35 × 140 → 4 | `Spoil` (frame 0 `BOMBS`, 1 `POWER`, 2 `SPEED`, 3 any other type, so `DELAY`) |

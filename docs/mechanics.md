@@ -4,7 +4,7 @@ The game rules as the code implements them on `dev`: what a bomb does, how long 
 
 ## Grid
 
-- One cell is `TILE_SIZE` = 35 px on both sides. Both maps are 32 × 21 cells, which is why the Phaser canvas is 1120 × 735 (`Bomberman-2.0/src/game/main.ts`).
+- One cell is `TILE_SIZE` = 35 px on both sides. `default_map` and `small_map` are 32 × 21 cells, `big_map` is 40 × 24. The game view is capped at 1120 × 735 px (32 × 21 cells) by `Bomberman-2.0/src/routes/game/Game.tsx`; on a bigger map the camera follows the local player (see [maps.md](maps.md#invariants)).
 - Cell of a sprite: `col = floor(x / 35)`, `row = floor(y / 35)` (`currentCol` / `currentRow` in `Bomberman-2.0/src/game/entities/player.ts`). Shared entities sit at the cell centre: `col * 35 + 17.5`.
 - The server keeps a `shadow_map` per game: wall (1), box (5), empty (6). Bombs, spoils and players are not in it. See [maps.md](maps.md).
 
@@ -77,14 +77,14 @@ Pick-up: the local player overlaps a spoil sprite → emits `pick up spoil` and 
 
 Only when the game has `isPortalsEnabled`.
 
-- Portal cells are fixed per map: `SMALL_MAP_PORTAL_SPAWNS` / `DEFAULT_MAP_PORTAL_SPAWNS` in `Bomberman-2.0-Backend/src/constants.ts` (four cells each, all covered by boxes in the current maps). `Bomb` uses the small list when `mapName === "small_map"` and the default list otherwise.
+- Portal cells are fixed per map: `DEFAULT_MAP_PORTAL_SPAWNS`, `SMALL_MAP_PORTAL_SPAWNS`, `BIG_MAP_PORTAL_SPAWNS` in `Bomberman-2.0-Backend/src/constants.ts` (four cells each, all covered by boxes). `Bomb` gets the list from `portalSpawnsFor(mapName)`; an unknown map name gets the default list.
 - A blast on a portal cell creates a `Portal` there instead of a spoil. A cell gets one portal: a later blast on it adds no second one.
 - Entering a portal: the client emits `use portal`, hides the player and disables its body and movement for `PORTAL_DELAY_STEP` 500 ms. The server needs at least two portals; it picks a random other portal and broadcasts `teleport player` with that cell's centre.
 - Cooldown: after the player enters a portal, the client ignores portal overlaps for `PORTAL_DELAY` 3000 ms.
 
 ## Starting, ending and winning
 
-- **Players:** a game starts with at least 2 players (`players.length > 1` in `Pending.tsx` and `EndGameModal.tsx`). The maximum is the map's `max_players`: 14 on `default_map`, 8 on `small_map`.
+- **Players:** a game starts with at least 2 players (`players.length > 1` in `Pending.tsx` and `EndGameModal.tsx`). The maximum is the map's `max_players`: 14 on `default_map`, 8 on `small_map`, 20 on `big_map`.
 - **Start countdown:** 3 s, run on each client after `start timer`.
 - **Time limit:** `GAME_DURATION` 180 s. The client shows its own countdown (`CountdownTimer.tsx`), which is not synced to the server.
 - **End conditions** and their delays (5 s after a win, 2 s when nobody is left, 0 s when a leave or disconnect leaves at most one living player, 180 s time limit) are in [architecture.md › Lifecycle](architecture.md#lifecycle-of-a-match). Stats are processed only for the two death-based endings.
@@ -105,7 +105,7 @@ Chosen by the host on `/map` (`Bomberman-2.0/src/routes/map/SelectMap.tsx` and i
 
 | Option | Values | Effect |
 | --- | --- | --- |
-| `mapName` | `default_map`, `small_map` | grid, spawns, max players, portal cells |
+| `mapName` | `default_map`, `small_map`, `big_map` | grid, spawns, max players, portal cells |
 | `isPortalsEnabled` | default off | portals can appear |
 | `isDelaySpoilEnabled` | default off | `DELAY` joins the spoil pool |
 

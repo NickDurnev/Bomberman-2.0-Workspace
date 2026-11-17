@@ -58,7 +58,7 @@ Ownership split: **speed** and **max bombs** exist only on the client (the serve
 ## Spoil, portal, tombstone
 
 - `Spoil`: `id`, `row`, `col`, `spoil_type` (`SPEED` 0, `POWER` 1, `BOMBS` 2, `DELAY` 3; `DELAY` only when `isDelaySpoilEnabled`). Client frame in `spoil_tileset`: `BOMBS` 0, `POWER` 1, `SPEED` 2, other 3. The client reports a touch with `pick up spoil`; the server removes it, applies it to the server player and broadcasts `spoil was picked`.
-- `Portal`: `id`, `row`, `col`. Spawns only at the fixed cells in `SMALL_MAP_PORTAL_SPAWNS` / `DEFAULT_MAP_PORTAL_SPAWNS` (`Bomberman-2.0-Backend/src/constants.ts`) when a blast reaches them. `use portal` makes the server pick a random other portal and broadcast `teleport player`. The client enforces the cooldown (`PORTAL_DELAY`, `PORTAL_DELAY_STEP`).
+- `Portal`: `id`, `row`, `col`. Spawns only at the fixed cells in the map's list from `portalSpawnsFor(mapName)` (`DEFAULT_MAP_PORTAL_SPAWNS`, `SMALL_MAP_PORTAL_SPAWNS`, `BIG_MAP_PORTAL_SPAWNS` in `Bomberman-2.0-Backend/src/constants.ts`) when a blast reaches them. `use portal` makes the server pick a random other portal and broadcast `teleport player`. The client enforces the cooldown (`PORTAL_DELAY`, `PORTAL_DELAY_STEP`).
 - Tombstone: the server stores `{ row, col }` under a uuid `tombId` when a player dies and broadcasts `show tombstone`; the client `Tombstone` sprite (id = `tombId`, `playerId`) replaces the dead enemy sprite.
 
 ## Shared constants

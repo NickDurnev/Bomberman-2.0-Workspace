@@ -20,7 +20,7 @@ Terms used in the code and in these docs. One term, one meaning. Where the code 
 | **Play instance** (`Play`, `client.playInstance`) | Per-connection server object with the gameplay handlers. It starts no timers. |
 | **Player id** / custom id (`client.customId`, `Player.id`, `socket_id`) | The stable UUID stored in browser localStorage under `socket_id` and sent in the handshake. Identifies a player everywhere in game state and is the key of `PlayStats.userId` and of the skin texture. Not the socket.io connection id. |
 | **Portal** | A teleport cell. Appears when a blast hits one of the map's fixed portal cells (`*_PORTAL_SPAWNS`) and portals are enabled. |
-| **Portal cell** / **portal spawn** | One of the fixed `(row, col)` cells in `SMALL_MAP_PORTAL_SPAWNS` / `DEFAULT_MAP_PORTAL_SPAWNS`. |
+| **Portal cell** / **portal spawn** | One of the fixed `(row, col)` cells in the map's `*_MAP_PORTAL_SPAWNS` list (`portalSpawnsFor(mapName)`). |
 | **Power** | Blast range in cells from the bomb, per player on the server: 1, +1 per `POWER` spoil. |
 | **`prevGameInfo`** | The finished `Game` with a `noKillPhrase` on each player without kills, sent with `player win` and `end game` and shown in the results modal (`EndGameModal`). |
 | **Running game** | A `Game` in `runningGames` (between `start game` and `end game`). |
