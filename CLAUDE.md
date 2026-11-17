@@ -24,6 +24,7 @@ Rulesets in all child repos: `dev` and `main` accept changes only through a PR, 
 
 - `docs/` - architecture, mechanics, entities, socket contract, maps, assets, known traps.
 - `scripts/check-socket-contract.sh` - checks `docs/socket-contract.md` against the code.
+- `scripts/build-map.py` - builds a map from a hand-drawn grid in `scripts/maps/` (checks, both JSON copies, preview PNG). See `docs/maps.md` › Adding a map.
 - `Makefile`, `docker-compose.yml` - local dev (Mongo in Docker).
 - `.claude/rules/` - rules loaded in every session (see below).
 - `.claude/commands/e2e.md` - `/e2e`: routes to the E2E skill in `Bomberman-2.0-E2E/.claude/skills/e2e/` (run, status, stop, fix, CI run, add a spec).
