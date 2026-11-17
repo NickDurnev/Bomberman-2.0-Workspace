@@ -11,7 +11,7 @@ How a change gets from `dev` to production in `Bomberman-2.0` and `Bomberman-2.0
 3. The same push runs `.github/workflows/release.yml`. release-please (`googleapis/release-please-action@v4`) reads the Conventional Commits since the last release and opens or updates the release PR (branch `release-please--branches--main`). The PR bumps `package.json`, `package-lock.json` and `.release-please-manifest.json`, and adds the new section to `CHANGELOG.md`.
 4. The job `Auto-merge release PR` merges that PR with `--admin`, because `main` needs a code-owner review.
 5. The merge is a new push to `main`. release-please creates the tag `vX.Y.Z` and the GitHub Release. This push does not deploy again: the backend deploy job and the Vercel build skip a commit from the release branch (`ci-cd.yml` job `if`, `vercel.json` `ignoreCommand`).
-6. The job `Back-merge release commit to dev` copies the files of the release commit to a branch `chore/back-merge-vX.Y.Z`, opens a PR to `dev`, waits for `checks` (`dev` lets nobody bypass it), and merges it with `--admin`. Then `dev` has the same version as `main`.
+6. The job `Back-merge release commit to dev` merges the release commit into a branch `chore/back-merge-vX.Y.Z` from `dev` (a git merge, so `dev` gets the history of `main`), opens a PR to `dev`, waits for `checks` (`dev` lets nobody bypass it), and merges it with a merge commit and `--admin`. Then `dev` has the same version as `main`, and the next `dev` → `main` PR merges cleanly. If `dev` changed a release-managed line (CHANGELOG, manifest, a `version` line or the line next to it) before the merge, the job stops with an error: merge `main` into `dev` by hand.
 
 ## Versions
 
