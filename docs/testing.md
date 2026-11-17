@@ -97,7 +97,8 @@ describe("example", () => {
 
 - Run it by hand from your computer: `cd Bomberman-2.0-E2E && npm run load`. The default target is the production backend, and the tool asks you to confirm. For a dry run, use `--url http://localhost:4000` with `make backend`.
 - Run it against production only with the maintainer.
-- CI runs only its unit tests (`npm run load:test`, also in `make ci`), never the load test.
+- Or run it from a GitHub runner: the `Load test` workflow in `Bomberman-2.0-E2E` (`workflow_dispatch`, production only). From a computer, the bots share one network link, and above about 14 bots the verdict measures that link. The runner has no SSH access: run `npm run load:watch` on your computer during the run for the droplet metrics.
+- The `checks` CI job runs only its unit tests (`npm run load:test`, also in `make ci`).
 
 What it measures:
 
