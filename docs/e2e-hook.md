@@ -24,10 +24,14 @@ window.__e2e: {
     enemies: { name: string; x: number; y: number }[];
     bombs: number; // active bomb sprites
   } | null;
+  // Pack id each texture-pack key was loaded from: the room's pack,
+  // "default" for a fallback, null when missing. {} before Preload is done.
+  textures(): Record<string, string | null>;
 }
 ```
 
 - `E2E_SOCKET_EVENTS` lists every event the client registers on `clientSocket`. A new `clientSocket.on` adds its event to this list.
+- `textures()` copies the game registry value that `Preload` writes (`TEXTURE_SOURCES_KEY` in `Bomberman-2.0/src/utils/texturePacks.ts`, see [assets.md](assets.md) › Texture packs). Its keys are the `PACK_TEXTURES` keys of `Preload.ts`.
 - `name` is the text above the player sprite. `alive` is the local player's `active` flag (`becomesDead` clears it).
 - The hook only reads. It never emits, never changes game objects and never calls game methods.
 

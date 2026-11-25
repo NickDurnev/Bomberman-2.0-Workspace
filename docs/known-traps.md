@@ -114,6 +114,16 @@ On the server, `Game.addPlayer` did not catch the second join of the same id. It
 
 **Rule.** When you change a shared constant or a map, change both repos in the same change set. The list is in [entities.md › Shared constants](entities.md#shared-constants) and [maps.md](maps.md#invariants).
 
+## A map id reused for a new layout
+
+**Symptom.** In the minutes between the backend deploy and the frontend deploy, players spawn inside boxes, blasts clear cells the client draws as walls, and a bomb on a row the server map does not have throws inside the bomb-queue timer and stops the server.
+
+**Cause.** The map id travels on the wire (`create game` `mapName`). The server builds the grid from its copy of `<id>.json`, the client draws its own copy. The backend deploys first, so for a while the old client sends the old id and draws the old layout while the new server reads a new layout under the same id.
+
+**Rule.** An id names one layout for good. A new layout gets a new id; to rename a map, change its menu title in `SelectMap.tsx`, not its id. `arena_map` is shown as "Default map" and `default_map` as "Classic map" for this reason.
+
+**Status.** Guarded by `Bomberman-2.0-Backend/test/unit/arena-map.test.ts` (`default_map` keeps its 32 × 21 grid).
+
 ## Rules for new code
 
 - **Socket payloads:** a new or changed handler validates the payload shape and checks ownership (`playerId === client.customId`, the sender is a player of the game). Do not widen what a client can claim (see [socket-contract.md › Authority rule](socket-contract.md#authority-rule)).

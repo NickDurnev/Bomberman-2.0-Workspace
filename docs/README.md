@@ -13,7 +13,7 @@ Read 1–3 before any change. Then read the docs for the area you touch.
 5. [entities.md](entities.md): server and client classes for each game object and which side owns what.
 6. [socket-contract.md](socket-contract.md): every socket event, the handshake, the authority rule and the listener rule.
 7. [maps.md](maps.md): Tiled map format, how each side loads a map, map invariants.
-8. [assets.md](assets.md): asset folders, `Preload` keys, sprite sizes, the avatar pipeline.
+8. [assets.md](assets.md): asset folders, `Preload` keys, sprite sizes, texture packs and the map preview, the avatar pipeline.
 9. [testing.md](testing.md): the backend test suite, how to run it, the helpers, where a new test goes; the load test.
 10. [e2e-hook.md](e2e-hook.md): the read-only `window.__e2e` hook that the E2E suite uses, and when it must change.
 11. [releases.md](releases.md): the `dev` → `main` release, the deploys, release-please and the back-merge to `dev`.
