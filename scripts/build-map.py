@@ -6,10 +6,11 @@ The grid lives in scripts/maps/<name>.txt:
   S  spawn cell (empty)
   P  portal cell (a box; a portal appears when it breaks)
 
-The script checks the grid, writes the server and client Tiled JSON copies
-and, with --png, renders the menu preview. See docs/maps.md.
+The script checks the grid and writes the server and client Tiled JSON
+copies. The menu draws the map preview live from the client copy. See
+docs/maps.md.
 
-  python3 scripts/build-map.py big_map --players 20 --png
+  python3 scripts/build-map.py big_map --players 20
   python3 scripts/build-map.py big_map --players 20 --check
 """
 
@@ -27,7 +28,6 @@ TILE_OF = {"#": WALL, "o": BOX, ".": EMPTY, "S": EMPTY, "P": BOX}
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SERVER_DIR = "Bomberman-2.0-Backend/src/maps"
 CLIENT_DIR = "Bomberman-2.0/public/assets/maps"
-PREVIEW_DIR = "Bomberman-2.0/public/assets/images/menu"
 
 
 def parse_grid(text):
@@ -174,25 +174,11 @@ def grid_from_tiled(tiled):
     return "\n".join("".join(row) for row in rows) + "\n"
 
 
-def render_png(grid, path, scale=2):
-    from PIL import Image  # pyright: ignore[reportMissingImports]  (only for --png)
-
-    tileset = Image.open(ROOT / CLIENT_DIR / "tileset.png").convert("RGBA")
-    tile = {t: tileset.crop(((t - 1) * TILE, 0, t * TILE, TILE)) for t in (WALL, BOX, EMPTY)}
-    image = Image.new("RGBA", (len(grid[0]) * TILE, len(grid) * TILE))
-    for r, row in enumerate(grid):
-        for c, ch in enumerate(row):
-            image.paste(tile[TILE_OF[ch]], (c * TILE, r * TILE))
-    image = image.resize((image.width * scale, image.height * scale), Image.NEAREST)
-    image.save(path)
-
-
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("name")
     parser.add_argument("--players", type=int, required=True)
     parser.add_argument("--min-distance", type=int, default=5)
-    parser.add_argument("--png", action="store_true", help="also render the menu preview")
     parser.add_argument("--check", action="store_true", help="validate and compare the existing copies")
     parser.add_argument("--root", type=pathlib.Path, default=ROOT)
     args = parser.parse_args()
@@ -222,8 +208,6 @@ def main():
     biome = args.root / "Bomberman-2.0-Backend/node_modules/.bin/biome"
     if biome.exists():
         subprocess.run([str(biome), "format", "--write", str(copies[0])], cwd=copies[0].parents[2], check=True, capture_output=True)
-    if args.png:
-        render_png(grid, args.root / PREVIEW_DIR / f"{args.name}_preview.png")
 
     total = len(grid) * len(grid[0])
     walls, boxes = sum(row.count("#") for row in grid), sum(row.count("o") + row.count("P") for row in grid)
