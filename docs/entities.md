@@ -22,7 +22,7 @@ Client sprites carry the server id in `id` so handlers can find them (`findById`
 
 `Game` is one lobby slot and, after start, one match. Created by `Lobby.createPendingGame` from the `create game` payload.
 
-- Identity and settings: `id` (uuid), `name`, `mapName`, `isPortalsEnabled`, `isDelaySpoilEnabled`, `createdAt`.
+- Identity and settings: `id` (uuid), `name`, `mapName`, `isPortalsEnabled`, `isDelaySpoilEnabled`, `texturePack`, `createdAt`. `texturePack` is always an id from `TEXTURE_PACKS`: the constructor passes the payload value through `toTexturePack` (`Bomberman-2.0-Backend/src/constants.ts`), which turns a missing, non-string or unknown value into `DEFAULT_TEXTURE_PACK` (`"default"`). Every player of the room draws this pack ([assets.md › Texture packs](assets.md#texture-packs)).
 - Map: `layer_info` (the first layer of the map JSON, including `properties.max_players`, `spawns`, and the tile ids of `wall` and `box`), `max_players`, `shadow_map` (grid of `EMPTY_CELL` 6 / `DESTRUCTIBLE_CELL` 5 / `NON_DESTRUCTIBLE_CELL` 1).
 - People: `players: Player[]`, `playerSpawns` (free spawn cells; a spawn is removed on join and returned on leave).
 - Live objects: `bombs`, `spoils`, `portals`, `tombstones`, all `Map<id, …>`. These serialise to `{}` in socket payloads; clients learn about them only through events.
@@ -58,12 +58,12 @@ Ownership split: **speed** and **max bombs** exist only on the client (the serve
 ## Spoil, portal, tombstone
 
 - `Spoil`: `id`, `row`, `col`, `spoil_type` (`SPEED` 0, `POWER` 1, `BOMBS` 2, `DELAY` 3; `DELAY` only when `isDelaySpoilEnabled`). Client frame in `spoil_tileset`: `BOMBS` 0, `POWER` 1, `SPEED` 2, other 3. The client reports a touch with `pick up spoil`; the server removes it, applies it to the server player and broadcasts `spoil was picked`.
-- `Portal`: `id`, `row`, `col`. Spawns only at the fixed cells in the map's list from `portalSpawnsFor(mapName)` (`DEFAULT_MAP_PORTAL_SPAWNS`, `SMALL_MAP_PORTAL_SPAWNS`, `BIG_MAP_PORTAL_SPAWNS` in `Bomberman-2.0-Backend/src/constants.ts`) when a blast reaches them. `use portal` makes the server pick a random other portal and broadcast `teleport player`. The client enforces the cooldown (`PORTAL_DELAY`, `PORTAL_DELAY_STEP`).
+- `Portal`: `id`, `row`, `col`. Spawns only at the fixed cells in the map's list from `portalSpawnsFor(mapName)` (`DEFAULT_MAP_PORTAL_SPAWNS`, `ARENA_MAP_PORTAL_SPAWNS`, `SMALL_MAP_PORTAL_SPAWNS`, `BIG_MAP_PORTAL_SPAWNS` in `Bomberman-2.0-Backend/src/constants.ts`) when a blast reaches them. `use portal` makes the server pick a random other portal and broadcast `teleport player`. The client enforces the cooldown (`PORTAL_DELAY`, `PORTAL_DELAY_STEP`).
 - Tombstone: the server stores `{ row, col }` under a uuid `tombId` when a player dies and broadcasts `show tombstone`; the client `Tombstone` sprite (id = `tombId`, `playerId`) replaces the dead enemy sprite.
 
 ## Shared constants
 
-These values exist in both `Bomberman-2.0-Backend/src/constants.ts` and `Bomberman-2.0/src/utils/constants.ts` and must stay equal: `TILE_SIZE` (35), spoil types (`SPEED`/`POWER`/`BOMBS`/`DELAY`), `INITIAL_POWER`, `STEP_POWER`, `INITIAL_DELAY`, `STEP_DELAY`, `MIN_DELAY`, `GAME_DURATION`, `POINTS_PER_*`, and the lobby room id (`lobbyId` in `lobby.ts`, `LOBBY_ID` on the client, defined but not used). Map files exist in both repos too (`Bomberman-2.0-Backend/src/maps/`, `Bomberman-2.0/public/assets/maps/`). The client hard-codes the empty tile id 6 in `Playing.onDetonateBomb`.
+These values exist in both `Bomberman-2.0-Backend/src/constants.ts` and `Bomberman-2.0/src/utils/constants.ts` and must stay equal: `TILE_SIZE` (35), spoil types (`SPEED`/`POWER`/`BOMBS`/`DELAY`), `INITIAL_POWER`, `STEP_POWER`, `INITIAL_DELAY`, `STEP_DELAY`, `MIN_DELAY`, `GAME_DURATION`, `POINTS_PER_*`, and the lobby room id (`lobbyId` in `lobby.ts`, `LOBBY_ID` on the client, defined but not used). The texture pack ids are duplicated as well: `TEXTURE_PACKS` and `DEFAULT_TEXTURE_PACK` in `Bomberman-2.0-Backend/src/constants.ts` must list the same ids as `TEXTURE_PACKS` and `DEFAULT_TEXTURE_PACK_ID` in `Bomberman-2.0/src/utils/texturePacks.ts` (`"default"`, `"classic"`; default `"default"`). Map files exist in both repos too (`Bomberman-2.0-Backend/src/maps/`, `Bomberman-2.0/public/assets/maps/`). The client hard-codes the empty tile id 6 in `Playing.onDetonateBomb`. The map ids too: `MAP_NAMES` in `Bomberman-2.0-Backend/src/constants.ts` (unknown → `DEFAULT_MAP` = `default_map`, `toMapName`) and `AVAILABLE_MAPS` in `Bomberman-2.0/src/utils/constants.ts` must list the same maps; `Bomberman-2.0-Backend/test/unit/game.test.ts` checks `MAP_NAMES` against the files in `src/maps/`.
 
 ## Adding an entity
 

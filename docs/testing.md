@@ -42,7 +42,7 @@ Run these in `Bomberman-2.0-Backend/`:
 - `waitFor<T>(socket, event, timeoutMs = 3000): Promise<T>`. Resolves with the first argument of the next `event`.
 - `expectNoEvent(socket, event, ms = 500): Promise<void>`. Rejects if the event arrives.
 - `emitAck<T>(socket, event, ...args): Promise<T>`. Emits and resolves with the acknowledgement.
-- `startTwoPlayerGame(url, opts?)`. Drives two players to a running game. It returns `{ p1, p2, gameId, game }`. `opts` is `mapName`, `isPortalsEnabled`, `isDelaySpoilEnabled`.
+- `startTwoPlayerGame(url, opts?)`. Drives two players to a running game. It returns `{ p1, p2, gameId, game }`. `opts` is `mapName`, `isPortalsEnabled`, `isDelaySpoilEnabled`, `texturePack` (sent only when set, so a test can create a room without a pack).
 - `disconnectAllPlayers()`. `stop()` calls it.
 
 ## Example
