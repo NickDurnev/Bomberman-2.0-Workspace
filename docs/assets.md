@@ -73,6 +73,7 @@ Every pack uses the same file names, flat in its folder:
 | The pack cards on `/map` | the pack of each card | `PackImage` with `packId` |
 | The map modal on `/map` | the pack selected in the form | `MapPreview` with `packId` |
 | The map cards of the `/map` carousel | `default` | `MapPreview` without `packId` |
+| The room cards of the lobby list, the pending screen | the room's pack: `texturePack` of the `Game` in `display pending games`, the `enter lobby` ack and `update game` | `MapPreview` with `packId` |
 
 **Active pack.** The HUD is React, outside Phaser, so `texturePacks.ts` keeps the pack of the current match in a small store. `PhaserGame` (`Bomberman-2.0/src/game/PhaserGame.tsx`) calls `setActiveTexturePack(gameData.texturePack)` in the `get current game` ack, before it creates the `Phaser.Game`. An unknown id sets `default`. `useActiveTexturePack()` (`useSyncExternalStore`) returns the active pack and re-renders on a change. The store starts on `default`. Nothing resets it after a match; the next match sets it again.
 
@@ -91,7 +92,7 @@ Every pack uses the same file names, flat in its folder:
 
 ### Map preview
 
-`MapPreview` (`Bomberman-2.0/src/components/MapPreview.tsx`, props `{ mapName, title, packId?, className? }`; `title` is the menu title of the card, because the id is not the name a player sees) draws a map on a `<canvas>`:
+`MapPreview` (`Bomberman-2.0/src/components/MapPreview.tsx`, props `{ mapName, title, packId?, className? }`; `title` is the menu title of the map from `MAP_TITLES`, because the id is not the name a player sees) draws a map on a `<canvas>`. A `mapName` that is not in `MAPS` (a room of a server that deployed a new map first) renders nothing:
 
 - The cells are the `Blocks` layer (`LAYER`) of the map JSON in `MAPS` (`Bomberman-2.0/src/utils/constants.ts`), the same client copy that Phaser loads.
 - The tiles come from `tileset.png` of the pack `packId` (default: `default`). A `tileset.png` that fails to load falls back once to the `default` file.
@@ -99,7 +100,11 @@ Every pack uses the same file names, flat in its folder:
 - It redraws when the map or the pack changes. A tileset load that ends after a change does not draw.
 - It has `role="img"` and the label `<map title> preview, <pack name> pack`, for example `Small map preview, Classic pack`.
 
-The carousel cards (`Card` in `Bomberman-2.0/src/components/ui/apple-cards-carousel.tsx`) draw it with the `default` pack. The map modal draws it above the pack cards with the pack selected in the form, so it redraws as soon as the host picks another pack. A change to a map JSON or to a `tileset.png` shows on the map screen with no other step.
+The carousel cards (`Card` in `Bomberman-2.0/src/components/ui/apple-cards-carousel.tsx`) draw it with the `default` pack. The map modal draws it above the pack cards with the pack selected in the form, so it redraws as soon as the host picks another pack.
+
+The lobby list (`GameSlots` in `Bomberman-2.0/src/components/GameSlots.tsx`) draws each pending room's map in the room's pack behind the room name, inside an `aria-hidden` wrapper: the room button keeps the room name as its accessible name (the E2E `joinRoom` finds it by that name). A details line describes the button (`aria-describedby`). The pending screen (`Bomberman-2.0/src/routes/pending/Pending.tsx`) draws the room's map under the room name, with the same details line. The line is `roomDetails` in `Bomberman-2.0/src/utils/room.ts`: `<map title> · <pack name> pack`, then `Portals` and `Delay spoil` when the host turned them on, for example `Small map · Classic pack · Portals`.
+
+A change to a map JSON or to a `tileset.png` shows on the map screen, in the lobby and on the pending screen with no other step.
 
 ### Adding a pack
 
