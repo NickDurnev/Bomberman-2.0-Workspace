@@ -4,7 +4,7 @@ The game rules as the code implements them on `dev`: what a bomb does, how long 
 
 ## Grid
 
-- One cell is `TILE_SIZE` = 35 px on both sides. `arena_map` is 28 × 18 cells, `default_map` and `small_map` are 32 × 21, `big_map` is 40 × 24. The game view is capped at 1120 × 735 px (32 × 21 cells) by `Bomberman-2.0/src/routes/game/Game.tsx`; on a bigger map the camera follows the local player (see [maps.md](maps.md#invariants)).
+- One cell is `TILE_SIZE` = 35 px on both sides. `arena_map` is 28 × 18 cells, `default_map` and `small_map` are 32 × 21, `big_map` is 40 × 24. The game view is capped at 1120 × 735 px (32 × 21 cells) by `Bomberman-2.0/src/routes/game/Game.tsx`; on a bigger map the camera follows the local player, and after its death a living enemy (see [maps.md](maps.md#invariants) and Spectating below).
 - Cell of a sprite: `col = floor(x / 35)`, `row = floor(y / 35)` (`currentCol` / `currentRow` in `Bomberman-2.0/src/game/entities/player.ts`). Shared entities sit at the cell centre: `col * 35 + 17.5`.
 - The server keeps a `shadow_map` per game: wall (1), box (5), empty (6). Bombs, spoils and players are not in it. See [maps.md](maps.md).
 
@@ -50,11 +50,12 @@ A blast that touches another bomb detonates it. The client detects the overlap o
 
 ## Death and tombstones
 
-- The client checks the local player against every `FireBlast` each frame. When the intersection is at least 10 % of the player's body area, it emits `player died` with its current cell and the blast owner as `killerId`, and hides itself (`becomesDead`).
+- The client checks the local player against every `FireBlast` each frame. When the intersection is at least 10 % of the player's body area, it emits `player died` with its current cell and the blast owner as `killerId`, and hides itself (`becomesDead`). It does this once: a player touching several blast cells in the same frame still dies once (`onPlayerVsBlast` returns when the player is no longer `active`).
 - Overlaps run only while the local player is `active`. A dead player and a player in the 500 ms portal transit (below) cannot be hit.
 - Your own blast kills you. The server records the death but gives no kill for it (`Player.kill` ignores its own id).
 - The server marks the player dead, credits the kill to `killerId`, stores a tombstone at the reported cell and broadcasts `show tombstone`. Clients draw a `Tombstone` sprite and remove that enemy sprite. Dead players stay in `Game.players`.
 - On the client of the dead player only, the view dips to black for ~300 ms (camera fade) and then stays grey (camera ColorMatrix grayscale, WebGL only) until the match scene stops. The board stays visible. This is `deathEffect` in `Bomberman-2.0/src/game/effects.ts`; it is always on.
+- **Spectating.** On the same client the camera then follows a living enemy: the killer if alive, else the first enemy left (`Spectator` in `Bomberman-2.0/src/game/spectator.ts`, created in `Playing.onPlayerVsBlast`). A label fixed to the top of the view reads `Spectating <name>`, with `◀ ▶` while more than one enemy is alive. Left / Right (keys or the thumbstick) switch to the previous or next living enemy. When the followed enemy dies or disconnects (its sprite is destroyed), the first living enemy left takes over; with none left the camera stops following and the label hides. On a map that fits the view the board does not move; on a bigger map (`big_map`) this is how a dead player keeps watching the match. Client only: the server is not told.
 
 ## Spoils (power-ups)
 
