@@ -120,7 +120,7 @@ On the server, `Game.addPlayer` did not catch the second join of the same id. It
 
 **Cause.** The map id travels on the wire (`create game` `mapName`). The server builds the grid from its copy of `<id>.json`, the client draws its own copy. The backend deploys first, so for a while the old client sends the old id and draws the old layout while the new server reads a new layout under the same id.
 
-**Rule.** An id names one layout for good. A new layout gets a new id; to rename a map, change its menu title in `SelectMap.tsx`, not its id. `arena_map` is shown as "Default map" and `default_map` as "Classic map" for this reason.
+**Rule.** An id names one layout for good. A new layout gets a new id; to rename a map, change its menu title in `MAP_TITLES` (`Bomberman-2.0/src/utils/constants.ts`), not its id. `arena_map` is shown as "Default map" and `default_map` as "Classic map" for this reason.
 
 **Status.** Guarded by `Bomberman-2.0-Backend/test/unit/arena-map.test.ts` (`default_map` keeps its 32 × 21 grid).
 
